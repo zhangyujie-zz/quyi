@@ -152,7 +152,7 @@
 
     <!-- 无数据状态 -->
     <div v-else class="no-data">
-      <i class="fas fa-theater-masks"></i>
+      <i class="fas fa-masks-theater"></i>
       <p>分类数据不存在</p>
       <button @click="goToCategories" class="btn btn-primary">
         返回分类列表
@@ -228,7 +228,7 @@ export default {
         '豫剧': 'fas fa-landmark',
         '快板': 'fas fa-drum',
         '山东快书': 'fas fa-guitar',
-        '昆曲': 'fas fa-drama-masks',
+        '昆曲': 'fas fa-masks-theater',
         '二人转': 'fas fa-users'
       }
       return iconMap[categoryName] || 'fas fa-folder'

@@ -185,7 +185,7 @@ export default {
           id: 4,
           title: '地方戏曲欣赏',
           description: '探索各地特色戏曲艺术的魅力',
-          icon: 'fas fa-landmark',
+          icon: 'fas fa-building',
           link: '/categories'
         }
       ]

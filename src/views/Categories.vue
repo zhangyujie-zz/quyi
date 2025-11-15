@@ -17,7 +17,6 @@
             :class="{ active: activeNav === nav.id }"
             @click="setActiveNav(nav.id)"
           >
-            <i :class="getNavIcon(nav.id)"></i>
             <span>{{ nav.name }}</span>
             <span class="category-count">{{ getCategoryCount(nav.id) }}</span>
           </div>
@@ -71,7 +70,7 @@
         </div>
         
         <div v-if="!isLoading && !errorMessage && filteredCategories.length === 0" class="no-categories">
-          <i class="fas fa-theater-masks"></i>
+          <i class="fas fa-masks-theater"></i>
           <p>暂无分类数据</p>
         </div>
       </div>
@@ -159,7 +158,7 @@ export default {
         '豫剧': 'fas fa-landmark',
         '快板': 'fas fa-drum',
         '山东快书': 'fas fa-guitar',
-        '昆曲': 'fas fa-drama-masks',
+        '昆曲': 'fas fa-masks-theater',
         '二人转': 'fas fa-users'
       }
       return iconMap[categoryName] || 'fas fa-folder'
