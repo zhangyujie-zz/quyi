@@ -147,7 +147,7 @@ export default {
             id: slide.id,
             title: slide.title,
             description: slide.description,
-            image: slide.image_url
+            image: this.processImageUrl(slide.image_url)
           }))
           console.log('成功加载数据库轮播图数据:', this.carouselSlides)
         } else {
@@ -267,6 +267,29 @@ export default {
         month: 'long',
         day: 'numeric'
       })
+    },
+    
+    processImageUrl(url) {
+      if (!url) return ''
+      
+      // 如果是完整的URL，直接返回
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url
+      }
+      
+      // 处理本地图片路径
+      if (url.startsWith('/src/')) {
+        // 开发环境：直接使用原路径
+        if (import.meta.env.MODE === 'development') {
+          return url
+        }
+        // 生产环境：将 /src/ 转换为 / 以指向根目录
+        // 因为图片会被复制到 dist 目录的根目录下
+        return url.replace('/src/', '/')
+      }
+      
+      // 其他路径直接返回
+      return url
     },
     
     viewEventDetails(eventId) {

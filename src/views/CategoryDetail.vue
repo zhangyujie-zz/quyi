@@ -75,14 +75,111 @@
           <section class="detail-section">
             <h2 class="section-title">代表人物</h2>
             <div class="representatives-content">
-              <div class="representatives-list">
-                <div 
-                  v-for="representative in representativesList" 
-                  :key="representative"
-                  class="representative-item"
-                >
-                  <i class="fas fa-user"></i>
-                  <span>{{ representative }}</span>
+              <!-- 表格视图 -->
+              <div class="representatives-table-section">
+                <div class="table-header">
+                  <h3>代表人物一览表</h3>
+                  <div class="view-toggle">
+                    <button 
+                      :class="{ active: viewMode === 'table' }"
+                      @click="viewMode = 'table'"
+                    >
+                      <i class="fas fa-table"></i> 表格视图
+                    </button>
+                    <button 
+                      :class="{ active: viewMode === 'grid' }"
+                      @click="viewMode = 'grid'"
+                    >
+                      <i class="fas fa-th-large"></i> 网格视图
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- 表格模式 -->
+                <div v-if="viewMode === 'table'" class="representatives-table">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>姓名</th>
+                        <th>出生年代</th>
+                        <th>代表作品</th>
+                        <th>艺术成就</th>
+                        <th>地位</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr 
+                        v-for="representative in detailedRepresentatives" 
+                        :key="representative.id"
+                        class="table-row"
+                        @click="showRepresentativeDetail(representative)"
+                      >
+                        <td class="name-cell">
+                          <i class="fas fa-user"></i>
+                          <strong>{{ representative.name }}</strong>
+                        </td>
+                        <td>{{ representative.birthPeriod }}</td>
+                        <td>{{ representative.masterpiece }}</td>
+                        <td>{{ representative.achievement }}</td>
+                        <td>
+                          <span class="status-badge" :class="representative.status">
+                            {{ representative.statusText }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <!-- 网格模式 -->
+                <div v-else class="representatives-grid">
+                  <div 
+                    v-for="representative in detailedRepresentatives" 
+                    :key="representative.id"
+                    class="representative-card"
+                    @click="showRepresentativeDetail(representative)"
+                  >
+                    <div class="card-header">
+                      <div class="avatar">
+                        <i class="fas fa-user-tie"></i>
+                      </div>
+                      <div class="card-info">
+                        <h4>{{ representative.name }}</h4>
+                        <span class="period">{{ representative.birthPeriod }}</span>
+                      </div>
+                    </div>
+                    <div class="card-content">
+                      <p class="masterpiece">
+                        <i class="fas fa-star"></i>
+                        {{ representative.masterpiece }}
+                      </p>
+                      <p class="achievement">{{ representative.achievement }}</p>
+                    </div>
+                    <div class="card-footer">
+                      <span class="status-badge" :class="representative.status">
+                        {{ representative.statusText }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 统计数据 -->
+              <div class="representatives-stats">
+                <div class="stat-item">
+                  <i class="fas fa-users"></i>
+                  <span class="stat-value">{{ detailedRepresentatives.length }}</span>
+                  <span class="stat-label">代表人物</span>
+                </div>
+                <div class="stat-item">
+                  <i class="fas fa-star"></i>
+                  <span class="stat-value">{{ masterCount }}</span>
+                  <span class="stat-label">大师级</span>
+                </div>
+                <div class="stat-item">
+                  <i class="fas fa-award"></i>
+                  <span class="stat-value">{{ livingCount }}</span>
+                  <span class="stat-label">在世艺术家</span>
                 </div>
               </div>
             </div>
@@ -177,13 +274,55 @@ export default {
       isLoading: false,
       errorMessage: '',
       category: null,
-      relatedVideos: []
+      relatedVideos: [],
+      representativesData: [], // 从数据库获取的代表人物数据
+      viewMode: 'table' // 视图模式: table/grid
     }
   },
   computed: {
     representativesList() {
       if (!this.category || !this.category.representatives) return []
       return this.category.representatives.split('、').map(item => item.trim())
+    },
+    
+    detailedRepresentatives() {
+      // 直接从数据库获取数据，如果数据不存在则返回静态数据
+      if (this.representativesData && this.representativesData.length > 0) {
+        return this.representativesData
+      }
+      
+      // 备用数据，确保页面有内容显示
+      const fallbackData = {
+        1: [ // 相声
+          { id: 1, name: '侯宝林', birthPeriod: '1917-1993', masterpiece: '《戏剧与方言》', achievement: '相声艺术大师，创立"侯派"风格', status: 'master', statusText: '大师' },
+          { id: 2, name: '马三立', birthPeriod: '1914-2003', masterpiece: '《买猴》', achievement: '相声泰斗，马派相声创始人', status: 'master', statusText: '泰斗' },
+          { id: 3, name: '郭德纲', birthPeriod: '1973-', masterpiece: '《我要幸福》', achievement: '德云社创始人，现代相声代表人物', status: 'living', statusText: '当代大师' },
+          { id: 4, name: '姜昆', birthPeriod: '1950-', masterpiece: '《如此照相》', achievement: '相声表演艺术家，中国曲艺家协会主席', status: 'living', statusText: '艺术家' }
+        ],
+        2: [ // 评书
+          { id: 1, name: '单田芳', birthPeriod: '1934-2018', masterpiece: '《隋唐演义》', achievement: '评书表演艺术家，"单氏评书"创始人', status: 'master', statusText: '艺术大师' },
+          { id: 2, name: '刘兰芳', birthPeriod: '1944-', masterpiece: '《岳飞传》', achievement: '评书表演艺术家，中国曲艺家协会名誉主席', status: 'living', statusText: '艺术家' },
+          { id: 3, name: '袁阔成', birthPeriod: '1929-2015', masterpiece: '《三国演义》', achievement: '评书表演艺术家，"袁派评书"创始人', status: 'master', statusText: '大师' },
+          { id: 4, name: '田连元', birthPeriod: '1941-', masterpiece: '《杨家将》', achievement: '评书表演艺术家，现代评书改革者', status: 'living', statusText: '改革家' }
+        ],
+        3: [ // 京剧
+          { id: 1, name: '梅兰芳', birthPeriod: '1894-1961', masterpiece: '《贵妃醉酒》', achievement: '京剧表演艺术家，"梅派"创始人', status: 'master', statusText: '艺术大师' },
+          { id: 2, name: '程砚秋', birthPeriod: '1904-1958', masterpiece: '《锁麟囊》', achievement: '京剧表演艺术家，"程派"创始人', status: 'master', statusText: '大师' },
+          { id: 3, name: '尚小云', birthPeriod: '1900-1976', masterpiece: '《昭君出塞》', achievement: '京剧表演艺术家，"尚派"创始人', status: 'master', statusText: '大师' },
+          { id: 4, name: '荀慧生', birthPeriod: '1900-1968', masterpiece: '《红娘》', achievement: '京剧表演艺术家，"荀派"创始人', status: 'master', statusText: '大师' }
+        ]
+      }
+      
+      // 默认返回对应分类的数据，如果没有则返回空数组
+      return fallbackData[this.id] || []
+    },
+    
+    masterCount() {
+      return this.detailedRepresentatives.filter(r => r.status === 'master').length
+    },
+    
+    livingCount() {
+      return this.detailedRepresentatives.filter(r => r.status === 'living').length
     }
   },
   
@@ -197,27 +336,157 @@ export default {
       this.errorMessage = ''
       
       try {
-        // 获取分类详情
-        this.category = await VideoService.getCategoryDetail(parseInt(this.id))
+        // 从Supabase获取分类详情
+        const { data: categoryData, error: categoryError } = await this.$supabase
+          .from('categories')
+          .select('*')
+          .eq('id', parseInt(this.id))
+          .single()
         
-        if (!this.category) {
+        if (categoryError) {
+          console.error('获取分类详情失败:', categoryError)
+          // 如果数据库连接失败，使用模拟数据
+          this.useMockData()
+          return
+        }
+        
+        if (!categoryData) {
           this.errorMessage = '分类不存在'
           return
         }
         
+        this.category = categoryData
+        
+        // 获取代表人物数据
+        await this.fetchRepresentatives()
+        
         // 获取相关视频
-        const videosResult = await VideoService.getVideos({
-          categoryId: parseInt(this.id),
-          pageSize: 4
-        })
-        this.relatedVideos = videosResult.videos
+        await this.fetchRelatedVideos()
         
       } catch (error) {
         console.error('加载分类详情失败:', error)
         this.errorMessage = '加载分类详情失败，请检查网络连接'
+        // 使用模拟数据作为备选方案
+        this.useMockData()
       } finally {
         this.isLoading = false
       }
+    },
+    
+    async fetchRepresentatives() {
+      try {
+        const { data, error } = await this.$supabase
+          .from('representatives')
+          .select('*')
+          .eq('category_id', parseInt(this.id))
+          .order('created_at', { ascending: true })
+        
+        if (error) throw error
+        
+        if (data && data.length > 0) {
+          // 格式化数据库数据为前端需要的格式
+          this.representativesData = data.map(rep => ({
+            id: rep.id,
+            name: rep.name,
+            birthPeriod: rep.birth_period,
+            masterpiece: rep.masterpiece,
+            achievement: rep.artistic_achievement,
+            status: rep.status,
+            statusText: rep.status_text,
+            avatarUrl: rep.avatar_url,
+            biography: rep.biography
+          }))
+        } else {
+          // 如果没有数据，使用模拟数据
+          this.useMockRepresentatives()
+        }
+      } catch (error) {
+        console.error('获取代表人物数据失败:', error)
+        // 如果数据库获取失败，使用模拟数据
+        this.useMockRepresentatives()
+      }
+    },
+    
+    async fetchRelatedVideos() {
+      try {
+        const { data, error } = await this.$supabase
+          .from('videos')
+          .select('*')
+          .eq('category_id', parseInt(this.id))
+          .limit(4)
+          .order('views_count', { ascending: false })
+        
+        if (!error && data) {
+          this.relatedVideos = data
+        }
+      } catch (error) {
+        console.error('获取相关视频失败:', error)
+      }
+    },
+    
+    useMockData() {
+      // 模拟数据用于数据库不可用时
+      const categories = {
+        1: { 
+          id: 1, 
+          name: '相声', 
+          description: '相声是中国传统喜剧表演艺术，以对话为主要形式。', 
+          representatives: '郭德纲、于谦、马三立、侯宝林',
+          origin: '北京、天津',
+          characteristics: '语言幽默、包袱迭出、互动性强',
+          performance_form: '对口相声、单口相声、群口相声',
+          popularity: '国家级'
+        },
+        2: { 
+          id: 2, 
+          name: '评书', 
+          description: '评书是口头讲述故事的表演艺术形式。', 
+          representatives: '单田芳、刘兰芳、袁阔成、田连元',
+          origin: '北京、河北',
+          characteristics: '故事性强、语言生动、节奏鲜明',
+          performance_form: '单人口述、坐姿表演',
+          popularity: '国家级'
+        },
+        3: { 
+          id: 3, 
+          name: '京剧', 
+          description: '京剧是中国最具代表性的戏曲艺术形式。', 
+          representatives: '梅兰芳、程砚秋、尚小云、荀慧生',
+          origin: '北京',
+          characteristics: '唱念做打、程式化表演、华丽服饰',
+          performance_form: '舞台表演、戏曲演唱',
+          popularity: '国家级'
+        }
+      }
+      
+      this.category = categories[this.id] || categories[1]
+      this.useMockRepresentatives()
+    },
+    
+    useMockRepresentatives() {
+      // 静态代表人物数据
+      const mockRepresentatives = {
+        1: [
+          { id: 1, name: '郭德纲', birthPeriod: '1973-', masterpiece: '《我要幸福》', achievement: '德云社创始人，现代相声代表人物', status: 'living', statusText: '当代大师' },
+          { id: 2, name: '于谦', birthPeriod: '1969-', masterpiece: '《我是黑社会》', achievement: '德云社搭档，相声表演艺术家', status: 'living', statusText: '艺术家' },
+          { id: 3, name: '马三立', birthPeriod: '1914-2003', masterpiece: '《买猴》', achievement: '相声泰斗，马派相声创始人', status: 'master', statusText: '泰斗' },
+          { id: 4, name: '侯宝林', birthPeriod: '1917-1993', masterpiece: '《戏剧与方言》', achievement: '相声艺术大师，创立"侯派"风格', status: 'master', statusText: '大师' }
+        ],
+        2: [
+          { id: 1, name: '单田芳', birthPeriod: '1934-2018', masterpiece: '《隋唐演义》', achievement: '评书表演艺术家，"单氏评书"创始人', status: 'master', statusText: '艺术大师' },
+          { id: 2, name: '刘兰芳', birthPeriod: '1944-', masterpiece: '《岳飞传》', achievement: '评书表演艺术家，中国曲艺家协会名誉主席', status: 'living', statusText: '艺术家' },
+          { id: 3, name: '袁阔成', birthPeriod: '1929-2015', masterpiece: '《三国演义》', achievement: '评书表演艺术家，"袁派评书"创始人', status: 'master', statusText: '大师' },
+          { id: 4, name: '田连元', birthPeriod: '1941-', masterpiece: '《杨家将》', achievement: '评书表演艺术家，现代评书改革者', status: 'living', statusText: '改革家' }
+        ],
+        3: [
+          { id: 1, name: '梅兰芳', birthPeriod: '1894-1961', masterpiece: '《贵妃醉酒》', achievement: '京剧表演艺术家，"梅派"创始人', status: 'master', statusText: '艺术大师' },
+          { id: 2, name: '程砚秋', birthPeriod: '1904-1958', masterpiece: '《锁麟囊》', achievement: '京剧表演艺术家，"程派"创始人', status: 'master', statusText: '大师' },
+          { id: 3, name: '尚小云', birthPeriod: '1900-1976', masterpiece: '《昭君出塞》', achievement: '京剧表演艺术家，"尚派"创始人', status: 'master', statusText: '大师' },
+          { id: 4, name: '荀慧生', birthPeriod: '1900-1968', masterpiece: '《红娘》', achievement: '京剧表演艺术家，"荀派"创始人', status: 'master', statusText: '大师' }
+        ]
+      }
+      
+      this.representativesData = mockRepresentatives[this.id] || []
     },
     
     getCategoryIcon(categoryName) {
@@ -255,6 +524,30 @@ export default {
     
     goToVideo(videoId) {
       this.$router.push(`/video/${videoId}`)
+    },
+    
+    showRepresentativeDetail(representative) {
+      // 这里可以弹出一个模态框显示详细资料
+      alert(`查看 ${representative.name} 的详细资料
+
+` +
+            `出生年代：${representative.birthPeriod}
+` +
+            `代表作品：${representative.masterpiece}
+` +
+            `艺术成就：${representative.achievement}`)
+    },
+    
+    showRepresentativeDetail(representative) {
+      // 这里可以弹出一个模态框显示详细资料
+      alert(`查看 ${representative.name} 的详细资料
+
+` +
+            `出生年代：${representative.birthPeriod}
+` +
+            `代表作品：${representative.masterpiece}
+` +
+            `艺术成就：${representative.achievement}`)
     }
   }
 }
@@ -405,6 +698,456 @@ export default {
 .representative-item i {
   color: #8B4513;
   font-size: 1.2rem;
+}
+
+/* 表格视图样式 */
+.representatives-table-section {
+  margin-bottom: 2rem;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.table-header h3 {
+  font-size: 1.3rem;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.view-toggle button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  color: #666;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.view-toggle button.active {
+  background: #8B4513;
+  color: white;
+  border-color: #8B4513;
+}
+
+.view-toggle button:hover:not(.active) {
+  background: #f8f9fa;
+}
+
+.representatives-table {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table th {
+  background: #f8f9fa;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.table-row {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.table-row:hover {
+  background: #f8f9fa;
+}
+
+.name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.name-cell i {
+  color: #8B4513;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-badge.master {
+  background: #ffe6e6;
+  color: #d9534f;
+}
+
+.status-badge.living {
+  background: #e6f3ff;
+  color: #0275d8;
+}
+
+/* 网格视图样式 */
+.representatives-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.representative-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.representative-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border-color: #8B4513;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(45deg, #8B4513, #A0522D);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.card-info h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.period {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.card-content {
+  margin-bottom: 1rem;
+}
+
+.masterpiece {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #8B4513;
+}
+
+.masterpiece i {
+  color: #ffd700;
+}
+
+.achievement {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-footer {
+  text-align: center;
+}
+
+/* 统计数据样式 */
+.representatives-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1rem;
+}
+
+.stat-item i {
+  font-size: 2rem;
+  color: #8B4513;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* 表格视图样式 */
+.representatives-table-section {
+  margin-bottom: 2rem;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.table-header h3 {
+  font-size: 1.3rem;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.view-toggle button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  color: #666;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.view-toggle button.active {
+  background: #8B4513;
+  color: white;
+  border-color: #8B4513;
+}
+
+.view-toggle button:hover:not(.active) {
+  background: #f8f9fa;
+}
+
+.representatives-table {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table th {
+  background: #f8f9fa;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #2c3e50;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.table-row {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.table-row:hover {
+  background: #f8f9fa;
+}
+
+.name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.name-cell i {
+  color: #8B4513;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-badge.master {
+  background: #ffe6e6;
+  color: #d9534f;
+}
+
+.status-badge.living {
+  background: #e6f3ff;
+  color: #0275d8;
+}
+
+/* 网格视图样式 */
+.representatives-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.representative-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.representative-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border-color: #8B4513;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(45deg, #8B4513, #A0522D);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.card-info h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.period {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.card-content {
+  margin-bottom: 1rem;
+}
+
+.masterpiece {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #8B4513;
+}
+
+.masterpiece i {
+  color: #ffd700;
+}
+
+.achievement {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-footer {
+  text-align: center;
+}
+
+/* 统计数据样式 */
+.representatives-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1rem;
+}
+
+.stat-item i {
+  font-size: 2rem;
+  color: #8B4513;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 0.9rem;
 }
 
 /* 视频网格样式 */

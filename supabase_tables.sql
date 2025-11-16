@@ -121,18 +121,18 @@ ON CONFLICT (name) DO UPDATE SET
 
 -- 插入示例轮播图数据
 INSERT INTO carousel_slides (title, description, image_url, link_url, sort_order) VALUES
-('传统相声艺术', '品味经典相声，感受语言艺术的魅力', 'https://images.unsplash.com/photo-1517330323742-98449c5d72f5?w=1200&h=600&fit=crop', '/videos?category=1', 1),
-('精彩评书表演', '聆听历史故事，沉浸于评书的艺术世界', 'https://images.unsplash.com/photo-1516900448138-898720e93639?w=1200&h=600&fit=crop', '/videos?category=2', 2),
-('京剧国粹经典', '欣赏国粹艺术，传承中华文化精髓', 'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=1200&h=600&fit=crop', '/videos?category=3', 3),
-('地方戏曲荟萃', '探索各地特色戏曲，体验多元文化魅力', 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=1200&h=600&fit=crop', '/videos', 4)
+('传统相声艺术', '品味经典相声，感受语言艺术的魅力', '/resource/image/首页相声.png', '/videos?category=1', 1),
+('精彩评书表演', '聆听历史故事，沉浸于评书的艺术世界', '/resource/image/首页评书.jpg', '/videos?category=2', 2),
+('京剧国粹经典', '欣赏国粹艺术，传承中华文化精髓', '/resource/image/首页京剧.jpg', '/videos?category=3', 3),
+('地方戏曲荟萃', '探索各地特色戏曲，体验多元文化魅力', '/resource/image/首页地方戏曲.jpg', '/videos', 4)
 ON CONFLICT DO NOTHING;
 
 -- 插入示例轮播图数据
 INSERT INTO carousel_slides (title, description, image_url, link_url, sort_order) VALUES
-('传统相声艺术', '品味经典相声，感受语言艺术的魅力', 'https://images.unsplash.com/photo-1517330323742-98449c5d72f5?w=1200&h=600&fit=crop', '/videos?category=1', 1),
-('精彩评书表演', '聆听历史故事，沉浸于评书的艺术世界', 'https://images.unsplash.com/photo-1516900448138-898720e93639?w=1200&h=600&fit=crop', '/videos?category=2', 2),
-('京剧国粹经典', '欣赏国粹艺术，传承中华文化精髓', 'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=1200&h=600&fit=crop', '/videos?category=3', 3),
-('地方戏曲荟萃', '探索各地特色戏曲，体验多元文化魅力', 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=1200&h=600&fit=crop', '/videos', 4)
+('传统相声艺术', '品味经典相声，感受语言艺术的魅力', '/resource/image/首页相声.png', '/videos?category=1', 1),
+('精彩评书表演', '聆听历史故事，沉浸于评书的艺术世界', '/resource/image/首页评书.jpg', '/videos?category=2', 2),
+('京剧国粹经典', '欣赏国粹艺术，传承中华文化精髓', '/resource/image/首页京剧.jpg', '/videos?category=3', 3),
+('地方戏曲荟萃', '探索各地特色戏曲，体验多元文化魅力', '/resource/image/首页地方戏曲.jpg', '/videos', 4)
 ON CONFLICT DO NOTHING;
 
 -- 插入示例视频数据（占位数据）
@@ -207,6 +207,61 @@ LEFT JOIN categories c ON v.category_id = c.id
 LEFT JOIN user_favorites uf ON v.id = uf.video_id
 LEFT JOIN user_watch_history wh ON v.id = wh.video_id
 GROUP BY v.id, c.id;
+
+-- 插入代表人物数据
+INSERT INTO representatives (category_id, name, birth_period, masterpiece, artistic_achievement, status, status_text, avatar_url, biography) VALUES
+-- 相声代表人物
+(1, '郭德纲', '1973-', '《我要幸福》', '德云社创始人，现代相声代表人物', 'active', '当代大师', '/avatars/guodegang.jpg', '郭德纲，1973年生于天津，中国相声演员、德云社创始人。他以其独特的表演风格和幽默感，将相声艺术推向了新的高度。'),
+(1, '于谦', '1969-', '《我是黑社会》', '德云社搭档，相声表演艺术家', 'active', '艺术家', '/avatars/yuqian.jpg', '于谦，1969年生于北京，中国相声演员，与郭德纲搭档多年，表演风格沉稳幽默。'),
+(1, '马三立', '1914-2003', '《买猴》', '相声泰斗，马派相声创始人', 'inactive', '泰斗', '/avatars/masanli.jpg', '马三立，1914-2003，相声表演艺术家，被誉为相声泰斗，创立了独特的马派相声风格。'),
+(1, '侯宝林', '1917-1993', '《戏剧与方言》', '相声艺术大师，创立"侯派"风格', 'inactive', '大师', '/avatars/houbaolin.jpg', '侯宝林，1917-1993，相声表演艺术家，对相声艺术的发展作出了重要贡献。'),
+
+-- 评书代表人物
+(2, '单田芳', '1934-2018', '《隋唐演义》', '评书表演艺术家，"单氏评书"创始人', 'inactive', '艺术大师', '/avatars/shandianfang.jpg', '单田芳，1934-2018，评书表演艺术家，以其独特的嗓音和讲述风格闻名。'),
+(2, '刘兰芳', '1944-', '《岳飞传》', '评书表演艺术家，中国曲艺家协会名誉主席', 'active', '艺术家', '/avatars/liulanfang.jpg', '刘兰芳，1944年生于辽宁，评书表演艺术家，以其精彩的《岳飞传》而闻名。'),
+(2, '袁阔成', '1929-2015', '《三国演义》', '评书表演艺术家，"袁派评书"创始人', 'inactive', '大师', '/avatars/yuankuocheng.jpg', '袁阔成，1929-2015，评书表演艺术家，对《三国演义》的评书演绎尤为经典。'),
+(2, '田连元', '1941-', '《杨家将》', '评书表演艺术家，现代评书改革者', 'active', '改革家', '/avatars/tianlianyuan.jpg', '田连元，1941年生于河北，评书表演艺术家，致力于评书艺术的改革创新。'),
+
+-- 京剧代表人物
+(3, '梅兰芳', '1894-1961', '《贵妃醉酒》', '京剧表演艺术家，"梅派"创始人', 'inactive', '艺术大师', '/avatars/meilanfang.jpg', '梅兰芳，1894-1961，京剧表演艺术家，被誉为"四大名旦"之首，创立了梅派艺术。'),
+(3, '程砚秋', '1904-1958', '《锁麟囊》', '京剧表演艺术家，"程派"创始人', 'inactive', '大师', '/avatars/chengyanqiu.jpg', '程砚秋，1904-1958，京剧表演艺术家，创立了程派艺术，以其独特的唱腔闻名。'),
+(3, '尚小云', '1900-1976', '《昭君出塞》', '京剧表演艺术家，"尚派"创始人', 'inactive', '大师', '/avatars/shangxiaoyun.jpg', '尚小云，1900-1976，京剧表演艺术家，创立了尚派艺术，表演风格独特。'),
+(3, '荀慧生', '1900-1968', '《红娘》', '京剧表演艺术家，"荀派"创始人', 'inactive', '大师', '/avatars/xunhuisheng.jpg', '荀慧生，1900-1968，京剧表演艺术家，创立了荀派艺术，对京剧旦角艺术有重要影响。'),
+
+-- 豫剧代表人物
+(4, '常香玉', '1923-2004', '《花木兰》', '豫剧表演艺术家，"常派"创始人', 'inactive', '大师', '/avatars/changxiangyu.jpg', '常香玉，1923-2004，豫剧表演艺术家，以其精彩的《花木兰》而闻名。'),
+(4, '马金凤', '1922-', '《穆桂英挂帅》', '豫剧表演艺术家，"马派"创始人', 'active', '艺术家', '/avatars/majinfeng.jpg', '马金凤，1922年生于河南，豫剧表演艺术家，以其独特的表演风格闻名。'),
+(4, '崔兰田', '1924-2003', '《秦香莲》', '豫剧表演艺术家，"崔派"创始人', 'inactive', '大师', '/avatars/cuiliantian.jpg', '崔兰田，1924-2003，豫剧表演艺术家，对豫剧艺术的发展作出了重要贡献。'),
+(4, '阎立品', '1920-2004', '《秦雪梅》', '豫剧表演艺术家，"阎派"创始人', 'inactive', '大师', '/avatars/yanlipin.jpg', '阎立品，1920-2004，豫剧表演艺术家，创立了独特的阎派表演风格。'),
+
+-- 快板代表人物
+(5, '李润杰', '1917-1990', '《劫刑车》', '快板艺术大师，快板艺术改革者', 'inactive', '大师', '/avatars/lirunjie.jpg', '李润杰，1917-1990，快板表演艺术家，对快板艺术的发展作出了重要贡献。'),
+(5, '高凤山', '1921-1993', '《同仁堂》', '快板表演艺术家，快板艺术传承者', 'inactive', '艺术家', '/avatars/gaofengshan.jpg', '高凤山，1921-1993，快板表演艺术家，致力于快板艺术的传承与发展。'),
+(5, '张志宽', '1941-', '《奇袭白虎团》', '快板表演艺术家，现代快板代表人物', 'active', '艺术家', '/avatars/zhangzhikuan.jpg', '张志宽，1941年生于天津，快板表演艺术家，以其独特的表演风格闻名。'),
+
+-- 山东快书代表人物
+(6, '高元钧', '1916-1993', '《武松打虎》', '山东快书艺术大师，"高派"创始人', 'inactive', '大师', '/avatars/gaoyuanjun.jpg', '高元钧，1916-1993，山东快书表演艺术家，对山东快书艺术的发展作出了重要贡献。'),
+(6, '杨立德', '1923-2018', '《鲁达除霸》', '山东快书表演艺术家，艺术传承者', 'inactive', '艺术家', '/avatars/yanglide.jpg', '杨立德，1923-2018，山东快书表演艺术家，致力于山东快书艺术的传承。'),
+(6, '刘司昌', '1937-', '《大实话》', '山东快书表演艺术家，现代创新者', 'active', '艺术家', '/avatars/liusichang.jpg', '刘司昌，1937年生于山东，山东快书表演艺术家，对山东快书艺术进行了创新。'),
+
+-- 昆曲代表人物
+(7, '俞振飞', '1902-1993', '《牡丹亭》', '昆曲表演艺术家，"俞派"创始人', 'inactive', '大师', '/avatars/yuzhenfei.jpg', '俞振飞，1902-1993，昆曲表演艺术家，对昆曲艺术的传承与发展作出了重要贡献。'),
+(7, '韩世昌', '1898-1977', '《长生殿》', '昆曲表演艺术家，昆曲艺术传承者', 'inactive', '艺术家', '/avatars/hanshichang.jpg', '韩世昌，1898-1977，昆曲表演艺术家，致力于昆曲艺术的传承。'),
+(7, '白云生', '1902-1972', '《玉簪记》', '昆曲表演艺术家，昆曲艺术改革者', 'inactive', '艺术家', '/avatars/baiyunsheng.jpg', '白云生，1902-1972，昆曲表演艺术家，对昆曲艺术进行了重要改革。'),
+
+-- 二人转代表人物
+(8, '赵本山', '1957-', '《相亲》', '二人转表演艺术家，本山传媒创始人', 'active', '艺术大师', '/avatars/zhaobenshan.jpg', '赵本山，1957年生于辽宁，二人转表演艺术家，以其独特的表演风格和幽默感闻名。'),
+(8, '小沈阳', '1981-', '《不差钱》', '二人转表演艺术家，赵本山弟子', 'active', '艺术家', '/avatars/xiaoshenyang.jpg', '小沈阳，1981年生于辽宁，二人转表演艺术家，以其精彩的表演深受观众喜爱。'),
+(8, '宋小宝', '1981-', '《相亲》', '二人转表演艺术家，喜剧演员', 'active', '艺术家', '/avatars/songxiaobao.jpg', '宋小宝，1981年生于吉林，二人转表演艺术家，以其独特的喜剧风格闻名。')
+ON CONFLICT DO NOTHING;
+
+-- 为代表人物表创建索引
+CREATE INDEX IF NOT EXISTS idx_representatives_category_id ON representatives(category_id);
+CREATE INDEX IF NOT EXISTS idx_representatives_status ON representatives(status);
+
+-- 启用代表人物表的行级安全策略
+ALTER TABLE representatives ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "允许任何人读取代表人物" ON representatives FOR SELECT USING (true);
 
 -- 创建函数：增加视频观看次数
 CREATE OR REPLACE FUNCTION increment_video_views(video_id_param BIGINT)
