@@ -13,7 +13,7 @@
           <router-link to="/" class="nav-link">首页</router-link>
           <router-link to="/categories" class="nav-link">曲艺分类</router-link>
           <router-link to="/videos" class="nav-link">视频展示</router-link>
-          <router-link to="/ai-learning" class="nav-link">AI学习助手</router-link>
+          <router-link to="/ai-chat" class="nav-link">AI对话</router-link>
           <router-link to="/about" class="nav-link">关于我们</router-link>
         </div>
         

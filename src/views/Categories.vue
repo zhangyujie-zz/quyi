@@ -63,8 +63,8 @@
               <span><i class="fas fa-video"></i> {{ category.videoCount }} 个视频</span>
               <span><i class="fas fa-users"></i> {{ category.studentCount }} 人学习</span>
             </div>
-            <button class="btn btn-secondary">
-              开始学习 <i class="fas fa-arrow-right"></i>
+            <button class="btn btn-secondary" @click.stop="viewCategoryDetails(category.id)">
+              查看详情 <i class="fas fa-eye"></i>
             </button>
           </div>
         </div>
@@ -234,6 +234,14 @@ export default {
     },
     
     goToCategory(categoryId) {
+      this.$router.push(`/category/${categoryId}`)
+    },
+    
+    viewCategoryDetails(categoryId) {
+      this.$router.push(`/category/${categoryId}`)
+    },
+    
+    viewCategoryDetails(categoryId) {
       this.$router.push(`/category/${categoryId}`)
     }
   }

@@ -4,7 +4,7 @@ import Categories from '../views/Categories.vue'
 import CategoryDetail from '../views/CategoryDetail.vue'
 import Videos from '../views/Videos.vue'
 import About from '../views/About.vue'
-import AiLearning from '../views/AiLearning.vue'
+import AIChat from '../views/AIChat.vue'
 import VideoPlayer from '../components/VideoPlayer.vue'
 
 const routes = [
@@ -30,9 +30,9 @@ const routes = [
     component: Videos
   },
   {
-    path: '/ai-learning',
-    name: 'AiLearning',
-    component: AiLearning
+    path: '/ai-chat',
+    name: 'AIChat',
+    component: AIChat
   },
   {
     path: '/about',

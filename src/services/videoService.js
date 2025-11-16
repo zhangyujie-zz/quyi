@@ -65,6 +65,274 @@ export class VideoService {
   }
 
   /**
+   * 获取分类详情包含代表人物的完整数据
+   * @param {number} categoryId - 分类ID
+   */
+  static async getCategoryDetailWithRepresentatives(categoryId) {
+    try {
+      // 获取分类基本信息
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('id', categoryId)
+        .single()
+      
+      if (categoryError) throw categoryError
+      
+      // 获取代表人物数据
+      const { data: representativesData, error: representativesError } = await supabase
+        .from('representatives')
+        .select('*')
+        .eq('category_id', categoryId)
+        .order('created_at', { ascending: true })
+      
+      if (representativesError) throw representativesError
+      
+      // 获取相关视频数据
+      const { data: videosData, error: videosError } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('category_id', categoryId)
+        .limit(4)
+        .order('views_count', { ascending: false })
+      
+      if (videosError) throw videosError
+      
+      return {
+        category: categoryData,
+        representatives: representativesData || [],
+        videos: videosData || []
+      }
+    } catch (error) {
+      console.error('获取分类详情完整数据失败:', error)
+      return null
+    }
+  }
+
+  /**
+   * 获取分类下的代表人物
+   * @param {number} categoryId - 分类ID
+   */
+  static async getCategoryRepresentatives(categoryId) {
+    try {
+      const { data, error } = await supabase
+        .from('representatives')
+        .select('*')
+        .eq('category_id', categoryId)
+        .order('created_at', { ascending: true })
+      
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('获取代表人物失败:', error)
+      return []
+    }
+  }
+
+  /**
+   * 获取分类下的相关视频
+   * @param {number} categoryId - 分类ID
+   * @param {number} limit - 限制数量
+   */
+  static async getCategoryVideos(categoryId, limit = 4) {
+    try {
+      const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('category_id', categoryId)
+        .limit(limit)
+        .order('views_count', { ascending: false })
+      
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('获取分类视频失败:', error)
+      return []
+    }
+  }
+
+  /**
+   * 获取分类的统计数据
+   * @param {number} categoryId - 分类ID
+   */
+  static async getCategoryStats(categoryId) {
+    try {
+      // 获取视频数量
+      const { count: videoCount, error: videoError } = await supabase
+        .from('videos')
+        .select('*', { count: 'exact', head: true })
+        .eq('category_id', categoryId)
+      
+      if (videoError) throw videoError
+      
+      // 获取代表人物数量
+      const { count: representativeCount, error: repError } = await supabase
+        .from('representatives')
+        .select('*', { count: 'exact', head: true })
+        .eq('category_id', categoryId)
+      
+      if (repError) throw repError
+      
+      // 获取总观看次数
+      const { data: videosData, error: viewsError } = await supabase
+        .from('videos')
+        .select('views_count')
+        .eq('category_id', categoryId)
+      
+      if (viewsError) throw viewsError
+      
+      const totalViews = videosData?.reduce((sum, video) => sum + (video.views_count || 0), 0) || 0
+      
+      return {
+        videoCount: videoCount || 0,
+        representativeCount: representativeCount || 0,
+        totalViews: totalViews
+      }
+    } catch (error) {
+      console.error('获取分类统计数据失败:', error)
+      return {
+        videoCount: 0,
+        representativeCount: 0,
+        totalViews: 0
+      }
+    }
+  }
+
+  /**
+   * 获取分类详情包含代表人物的完整数据
+   * @param {number} categoryId - 分类ID
+   */
+  static async getCategoryDetailWithRepresentatives(categoryId) {
+    try {
+      // 获取分类基本信息
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('id', categoryId)
+        .single()
+      
+      if (categoryError) throw categoryError
+      
+      // 获取代表人物数据
+      const { data: representativesData, error: representativesError } = await supabase
+        .from('representatives')
+        .select('*')
+        .eq('category_id', categoryId)
+        .order('created_at', { ascending: true })
+      
+      if (representativesError) throw representativesError
+      
+      // 获取相关视频数据
+      const { data: videosData, error: videosError } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('category_id', categoryId)
+        .limit(4)
+        .order('views_count', { ascending: false })
+      
+      if (videosError) throw videosError
+      
+      return {
+        category: categoryData,
+        representatives: representativesData || [],
+        videos: videosData || []
+      }
+    } catch (error) {
+      console.error('获取分类详情完整数据失败:', error)
+      return null
+    }
+  }
+
+  /**
+   * 获取分类下的代表人物
+   * @param {number} categoryId - 分类ID
+   */
+  static async getCategoryRepresentatives(categoryId) {
+    try {
+      const { data, error } = await supabase
+        .from('representatives')
+        .select('*')
+        .eq('category_id', categoryId)
+        .order('created_at', { ascending: true })
+      
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('获取代表人物失败:', error)
+      return []
+    }
+  }
+
+  /**
+   * 获取分类下的相关视频
+   * @param {number} categoryId - 分类ID
+   * @param {number} limit - 限制数量
+   */
+  static async getCategoryVideos(categoryId, limit = 4) {
+    try {
+      const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('category_id', categoryId)
+        .limit(limit)
+        .order('views_count', { ascending: false })
+      
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('获取分类视频失败:', error)
+      return []
+    }
+  }
+
+  /**
+   * 获取分类的统计数据
+   * @param {number} categoryId - 分类ID
+   */
+  static async getCategoryStats(categoryId) {
+    try {
+      // 获取视频数量
+      const { count: videoCount, error: videoError } = await supabase
+        .from('videos')
+        .select('*', { count: 'exact', head: true })
+        .eq('category_id', categoryId)
+      
+      if (videoError) throw videoError
+      
+      // 获取代表人物数量
+      const { count: representativeCount, error: repError } = await supabase
+        .from('representatives')
+        .select('*', { count: 'exact', head: true })
+        .eq('category_id', categoryId)
+      
+      if (repError) throw repError
+      
+      // 获取总观看次数
+      const { data: videosData, error: viewsError } = await supabase
+        .from('videos')
+        .select('views_count')
+        .eq('category_id', categoryId)
+      
+      if (viewsError) throw viewsError
+      
+      const totalViews = videosData?.reduce((sum, video) => sum + (video.views_count || 0), 0) || 0
+      
+      return {
+        videoCount: videoCount || 0,
+        representativeCount: representativeCount || 0,
+        totalViews: totalViews
+      }
+    } catch (error) {
+      console.error('获取分类统计数据失败:', error)
+      return {
+        videoCount: 0,
+        representativeCount: 0,
+        totalViews: 0
+      }
+    }
+  }
+
+  /**
    * 获取视频列表
    * @param {Object} options - 查询选项
    */

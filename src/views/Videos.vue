@@ -26,13 +26,22 @@
       </div>
 
       <!-- 加载状态 -->
-      <div v-if="loading" class="loading">
-        <div class="spinner"></div>
+      <div v-if="loading" class="loading-container">
+        <div class="loading-spinner"></div>
         <p>正在加载视频...</p>
       </div>
 
+      <!-- 错误提示 -->
+      <div v-else-if="errorMessage" class="error-container">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>{{ errorMessage }}</p>
+        <button @click="loadVideos" class="btn btn-secondary">
+          重新加载
+        </button>
+      </div>
+
       <!-- 视频列表 -->
-      <div v-else class="videos-grid">
+      <div v-else-if="filteredVideos.length > 0" class="videos-grid">
         <div 
           v-for="video in filteredVideos" 
           :key="video.id"
@@ -63,7 +72,7 @@
       </div>
 
       <!-- 空状态 -->
-      <div v-if="!loading && filteredVideos.length === 0" class="empty-state">
+      <div v-else class="empty-state">
         <i class="fas fa-video-slash"></i>
         <h3>暂无视频</h3>
         <p>当前没有找到符合条件的视频内容</p>
@@ -116,6 +125,7 @@ export default {
       categories: [],
       videos: [],
       loading: false,
+      errorMessage: '',
       page: 1,
       pageSize: 12,
       totalPages: 0,
@@ -131,7 +141,6 @@ export default {
     }
   },
   async mounted() {
-    await this.loadCategories()
     await this.loadVideos()
   },
   methods: {
@@ -145,23 +154,115 @@ export default {
     
     async loadVideos() {
       this.loading = true
+      this.errorMessage = ''
+      
       try {
-        const options = {
-          categoryId: this.selectedCategory || null,
-          page: this.page,
-          pageSize: this.pageSize
-        }
+        // 同时加载分类和视频数据
+        const [categoriesData, videosData] = await Promise.all([
+          VideoService.getCategories(),
+          VideoService.getVideos({
+            categoryId: this.selectedCategory || null,
+            page: this.page,
+            pageSize: this.pageSize
+          })
+        ])
         
-        const result = await VideoService.getVideos(options)
-        this.videos = result.videos
-        this.totalVideos = result.total
-        this.totalPages = result.totalPages
+        // 处理分类数据
+        this.categories = categoriesData || []
+        
+        // 处理视频数据
+        if (videosData && videosData.videos) {
+          this.videos = videosData.videos
+          this.totalVideos = videosData.total
+          this.totalPages = videosData.totalPages
+        } else {
+          // 如果数据库为空，使用默认数据
+          this.useDefaultVideos()
+        }
       } catch (error) {
         console.error('加载视频失败:', error)
-        this.videos = []
+        this.errorMessage = '获取视频数据失败，请检查网络连接'
+        // 降级使用默认数据
+        this.useDefaultVideos()
       } finally {
         this.loading = false
       }
+    },
+    
+    useDefaultVideos() {
+      // 默认视频数据
+      this.videos = [
+        {
+          id: 1,
+          title: '相声名段欣赏 - 郭德纲经典相声',
+          description: '郭德纲经典相声表演，包含多个经典段子，展现相声艺术的魅力。',
+          duration: 1800,
+          views_count: 25000,
+          category_id: 1,
+          performer: '郭德纲',
+          tags: ['相声', '经典', '幽默']
+        },
+        {
+          id: 2,
+          title: '评书精选 - 单田芳《隋唐演义》',
+          description: '单田芳大师经典评书《隋唐演义》，讲述隋唐历史英雄故事。',
+          duration: 2400,
+          views_count: 18000,
+          category_id: 2,
+          performer: '单田芳',
+          tags: ['评书', '历史', '经典']
+        },
+        {
+          id: 3,
+          title: '京剧经典 - 梅兰芳《贵妃醉酒》',
+          description: '梅兰芳大师经典京剧表演《贵妃醉酒》，展现京剧艺术的精髓。',
+          duration: 1500,
+          views_count: 12000,
+          category_id: 3,
+          performer: '梅兰芳',
+          tags: ['京剧', '经典', '艺术']
+        }
+      ]
+      this.totalVideos = this.videos.length
+      this.totalPages = 1
+    },
+    
+    useDefaultVideos() {
+      // 默认视频数据
+      this.videos = [
+        {
+          id: 1,
+          title: '相声名段欣赏 - 郭德纲经典相声',
+          description: '郭德纲经典相声表演，包含多个经典段子，展现相声艺术的魅力。',
+          duration: 1800,
+          views_count: 25000,
+          category_id: 1,
+          performer: '郭德纲',
+          tags: ['相声', '经典', '幽默']
+        },
+        {
+          id: 2,
+          title: '评书精选 - 单田芳《隋唐演义》',
+          description: '单田芳大师经典评书《隋唐演义》，讲述隋唐历史英雄故事。',
+          duration: 2400,
+          views_count: 18000,
+          category_id: 2,
+          performer: '单田芳',
+          tags: ['评书', '历史', '经典']
+        },
+        {
+          id: 3,
+          title: '京剧经典 - 梅兰芳《贵妃醉酒》',
+          description: '梅兰芳大师经典京剧表演《贵妃醉酒》，展现京剧艺术的精髓。',
+          duration: 1500,
+          views_count: 12000,
+          category_id: 3,
+          performer: '梅兰芳',
+          tags: ['京剧', '经典', '艺术']
+        }
+      ]
+      this.totalVideos = this.videos.length
+      this.totalPages = 1
     },
     
     async handleSearch() {
