@@ -3,9 +3,9 @@ import Home from '../views/Home.vue'
 import Categories from '../views/Categories.vue'
 import CategoryDetail from '../views/CategoryDetail.vue'
 import Videos from '../views/Videos.vue'
-import About from '../views/About.vue'
 import AIChat from '../views/AIChat.vue'
 import VideoPlayer from '../components/VideoPlayer.vue'
+import Guestbook from '../views/Guestbook.vue'
 
 const routes = [
   {
@@ -35,9 +35,9 @@ const routes = [
     component: AIChat
   },
   {
-    path: '/about',
-    name: 'About',
-    component: About
+    path: '/guestbook',
+    name: 'Guestbook',
+    component: Guestbook
   },
   {
     path: '/video/:id',

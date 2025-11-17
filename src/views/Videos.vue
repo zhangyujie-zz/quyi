@@ -96,149 +96,33 @@
       </div>
     </div>
 
-    <!-- 视频播放器模态框 -->
-    <div v-if="showVideoModal && currentVideo" class="video-modal" @click="closeVideo">
-      <div class="modal-content-split" @click.stop>
-        <button class="close-btn" @click="closeVideo">
-          <i class="fas fa-times"></i>
-        </button>
-        
-        <!-- 左侧：视频播放器 -->
-        <div class="video-section">
-          <div class="video-player">
-            <div class="player-placeholder">
-              <img 
-                v-if="currentVideo.thumbnail_url" 
-                :src="currentVideo.thumbnail_url" 
-                :alt="currentVideo.title"
-                class="video-cover"
-                @error="handleImageError"
-              >
-              <div class="play-overlay">
-                <i class="fas fa-play-circle"></i>
-              </div>
-            </div>
-          </div>
-          <div class="video-details">
-            <h2>{{ currentVideo.title }}</h2>
-            <p class="video-description">{{ currentVideo.description }}</p>
-            <div class="video-meta-info">
-              <span><i class="fas fa-user"></i> {{ currentVideo.performer || '未知表演者' }}</span>
-              <span><i class="fas fa-clock"></i> {{ formatDuration(currentVideo.duration) }}</span>
-              <span><i class="fas fa-tag"></i> {{ getCategoryName(currentVideo.category_id) }}</span>
-              <span><i class="fas fa-eye"></i> {{ currentVideo.views_count || 0 }} 次观看</span>
-            </div>
-            
-            <!-- AI讲解员按钮 -->
-            <div class="ai-explanation-section">
-              <button 
-                @click="generateExplanation"
-                :disabled="isGeneratingExplanation"
-                class="ai-explanation-btn"
-              >
-                <i class="fas fa-graduation-cap"></i>
-                {{ isGeneratingExplanation ? '正在生成讲解...' : 'AI讲解员' }}
-              </button>
-              <div v-if="isGeneratingExplanation" class="loading-status compact">
-                <div class="loading-spinner small"></div>
-                <p>正在为您生成专业讲解...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 右侧：评论区域 -->
-        <div class="comments-section">
-          <div class="comments-header">
-            <h3>评论 ({{ comments.length }})</h3>
-          </div>
-          
-          <!-- 评论输入框 -->
-          <div class="comment-input-area">
-            <div class="comment-input-wrapper">
-              <textarea 
-                v-model="newComment"
-                placeholder="发表你的看法..."
-                class="comment-input"
-                rows="3"
-                @keydown.enter.prevent="submitComment"
-              ></textarea>
-              <button 
-                @click="submitComment"
-                :disabled="!newComment.trim() || isSubmittingComment"
-                class="submit-btn"
-              >
-                {{ isSubmittingComment ? '发送中...' : '发送' }}
-              </button>
-            </div>
-          </div>
-          
-          <!-- 评论列表 -->
-          <div class="comments-list">
-            <div v-if="comments.length === 0" class="no-comments">
-              <i class="fas fa-comments"></i>
-              <p>暂无评论，快来抢沙发吧！</p>
-            </div>
-            
-            <div 
-              v-for="comment in comments" 
-              :key="comment.id"
-              class="comment-item"
-            >
-              <div class="comment-avatar">
-                <img 
-                  v-if="comment.avatar_url" 
-                  :src="comment.avatar_url" 
-                  :alt="comment.user_name"
-                  @error="handleImageError"
-                >
-                <i v-else class="fas fa-user"></i>
-              </div>
-              <div class="comment-content">
-                <div class="comment-header">
-                  <span class="username">{{ comment.user_name }}</span>
-                  <span class="comment-time">{{ formatTime(comment.created_at) }}</span>
-                </div>
-                <p class="comment-text">{{ comment.content }}</p>
-                <div class="comment-actions">
-                  <button class="like-btn">
-                    <i class="fas fa-thumbs-up"></i>
-                    {{ comment.likes_count || 0 }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- AI讲解弹窗 -->
-    <div v-if="showExplanation" class="ai-explanation-modal" @click="closeExplanationModal">
-      <div class="ai-explanation-modal-content" @click.stop>
-        <div class="ai-modal-header">
-          <div class="ai-modal-title">
-            <i class="fas fa-robot"></i>
-            <h3>AI专业讲解</h3>
-          </div>
-          <button @click="closeExplanationModal" class="ai-modal-close-btn">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="ai-modal-body">
-          <div class="explanation-text" v-html="currentExplanation"></div>
-        </div>
-      </div>
-    </div>
+    <!-- 引入共享的视频弹窗组件 -->
+    <VideosModal 
+      v-if="showVideoModal && currentVideo"
+      :video="currentVideo"
+      :comments="comments"
+      :isGeneratingExplanation="isGeneratingExplanation"
+      :currentExplanation="currentExplanation"
+      :showExplanation="showExplanation"
+      @close="closeVideo"
+      @new-comment="handleNewComment"
+      @generate-explanation="generateExplanation"
+      @close-explanation="closeExplanationModal"
+    />
   </div>
 </template>
 
 <script>
 import { VideoService } from '../services/videoService.js'
 import { AIService } from '../services/aiService.js'
+import { CommentService } from '../services/commentService.js'
+import VideosModal from '../components/VideosModal.vue'
 
 export default {
   name: 'Videos',
+  components: {
+    VideosModal
+  },
   data() {
     return {
       searchQuery: '',
@@ -442,65 +326,19 @@ export default {
       this.isGeneratingExplanation = false
     },
     
-    async loadComments(videoId) {
+    async loadComments() {
+      if (!this.currentVideo) return
+      
       try {
-        // 模拟评论数据
-        this.comments = [
-          {
-            id: 1,
-            user_name: '张三',
-            avatar_url: '/resource/image/representative figure/侯宝林.jpg',
-            content: '这个视频太精彩了！经典的相声作品，百看不厌。',
-            created_at: '2024-01-15T10:30:00Z',
-            likes_count: 23
-          },
-          {
-            id: 2,
-            user_name: '李四',
-            avatar_url: null,
-            content: '老师的表演功底深厚，每个细节都很到位。',
-            created_at: '2024-01-14T15:20:00Z',
-            likes_count: 15
-          },
-          {
-            id: 3,
-            user_name: '王五',
-            avatar_url: '/resource/image/representative figure/马三立.jpg',
-            content: '学到了很多，感谢分享！',
-            created_at: '2024-01-13T09:15:00Z',
-            likes_count: 8
-          }
-        ]
+        // 调用真实的评论API
+        this.comments = await CommentService.getComments(this.currentVideo.id)
       } catch (error) {
         console.error('加载评论失败:', error)
         this.comments = []
       }
     },
     
-    async submitComment() {
-      if (!this.newComment.trim() || this.isSubmittingComment) return
-      
-      this.isSubmittingComment = true
-      
-      try {
-        // 模拟提交评论
-        const comment = {
-          id: Date.now(),
-          user_name: '当前用户',
-          avatar_url: '/resource/image/representative figure/郭德纲.jpg',
-          content: this.newComment.trim(),
-          created_at: new Date().toISOString(),
-          likes_count: 0
-        }
-        
-        this.comments.unshift(comment)
-        this.newComment = ''
-      } catch (error) {
-        console.error('提交评论失败:', error)
-      } finally {
-        this.isSubmittingComment = false
-      }
-    },
+
     
     formatTime(isoString) {
       const date = new Date(isoString)
@@ -630,6 +468,11 @@ export default {
         }
         img.style.display = 'none'
       }
+    },
+
+    handleNewComment(newComment) {
+      // 将新评论添加到评论列表开头
+      this.comments.unshift(newComment)
     }
   }
 }

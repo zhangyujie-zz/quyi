@@ -93,7 +93,7 @@
         <!-- 显示一个相关视频 -->
         <div class="video-section">
           <h3>推荐视频</h3>
-          <div v-if="displayVideo" class="video-card">
+          <div v-if="displayVideo" class="video-card" @click="playVideo(displayVideo)">
             <div class="video-thumbnail">
               <img 
                 v-if="displayVideo.thumbnail_url" 
@@ -111,7 +111,7 @@
                 <span><i class="fas fa-clock"></i> {{ formatDuration(displayVideo.duration) }}</span>
                 <span><i class="fas fa-eye"></i> {{ displayVideo.views_count }} 次观看</span>
               </div>
-              <button @click="playVideo(displayVideo.id)" class="play-btn">
+              <button @click.stop="playVideo(displayVideo)" class="play-btn">
                 <i class="fas fa-play"></i>
                 立即观看
               </button>
@@ -124,6 +124,20 @@
             </div>
           </div>
         </div>
+
+        <!-- 引入Videos页面的视频弹窗组件 -->
+        <VideosModal 
+          v-if="showVideoModal && currentVideo"
+          :video="currentVideo"
+          :comments="comments"
+          :isGeneratingExplanation="isGeneratingExplanation"
+          :currentExplanation="currentExplanation"
+          :showExplanation="showExplanation"
+          @close="closeVideo"
+          @new-comment="handleNewComment"
+          @generate-explanation="generateExplanation"
+          @close-explanation="closeExplanationModal"
+        />
       </div>
     </div>
 
@@ -140,9 +154,14 @@
 
 <script>
 import { VideoService } from '../services/videoService.js'
+import { CommentService } from '../services/commentService.js'
+import VideosModal from '../components/VideosModal.vue'
 
 export default {
   name: 'CategoryDetail',
+  components: {
+    VideosModal
+  },
   props: {
     id: {
       type: [String, Number],
@@ -155,7 +174,17 @@ export default {
       errorMessage: '',
       category: null,
       representativesData: [], // 从数据库获取的代表人物数据
-      displayVideo: null // 显示的单个视频
+      displayVideo: null, // 显示的单个视频
+      
+      // 视频弹窗相关
+      showVideoModal: false,
+      currentVideo: null,
+      comments: [],
+      newComment: '',
+      isSubmittingComment: false,
+      isGeneratingExplanation: false,
+      currentExplanation: '',
+      showExplanation: false
     }
   },
   computed: {
@@ -454,9 +483,89 @@ export default {
       }
     },
     
-    playVideo(videoId) {
-      // 跳转到视频播放页面
-      this.$router.push(`/video/${videoId}`)
+    playVideo(video) {
+      this.currentVideo = video
+      this.showVideoModal = true
+      this.loadComments(video.id)
+    },
+    
+    closeVideo() {
+      this.showVideoModal = false
+      this.currentVideo = null
+      this.comments = []
+      this.newComment = ''
+      this.closeExplanationModal()
+    },
+    
+    closeExplanationModal() {
+      this.showExplanation = false
+      this.currentExplanation = ''
+      this.isGeneratingExplanation = false
+    },
+    
+    async loadComments(videoId) {
+      try {
+        // 调用真实的评论API
+        this.comments = await CommentService.getComments(videoId)
+      } catch (error) {
+        console.error('加载评论失败:', error)
+        this.comments = []
+      }
+    },
+    
+
+    
+    formatTime(isoString) {
+      const date = new Date(isoString)
+      const now = new Date()
+      const diff = now - date
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+      
+      if (days === 0) {
+        const hours = Math.floor(diff / (1000 * 60 * 60))
+        if (hours === 0) {
+          const minutes = Math.floor(diff / (1000 * 60))
+          return minutes === 0 ? '刚刚' : `${minutes}分钟前`
+        }
+        return `${hours}小时前`
+      } else if (days === 1) {
+        return '昨天'
+      } else if (days < 7) {
+        return `${days}天前`
+      } else {
+        return date.toLocaleDateString('zh-CN')
+      }
+    },
+    
+    async generateExplanation() {
+      if (this.isGeneratingExplanation || !this.currentVideo) return
+      
+      this.isGeneratingExplanation = true
+      this.showExplanation = false
+      this.currentExplanation = ''
+      
+      try {
+        // 模拟生成讲解
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        this.currentExplanation = `<p><strong>作品简介：</strong></p>
+          <p>《${this.currentVideo.title}》是一则精彩的${this.category?.name || '曲艺'}作品，由${this.currentVideo.performer || '著名艺术家'}表演。</p>
+          <p><strong>艺术特色：</strong></p>
+          <p>这个作品充分展现了${this.category?.name || '曲艺'}的艺术魅力，表演者运用精湛的技艺，将传统艺术的精髓完美呈现。无论是语言运用还是表演技巧，都体现了深厚的艺术功底。</p>
+          <p><strong>文化价值：</strong></p>
+          <p>作为传统曲艺的重要组成部分，这样的作品不仅具有很高的艺术价值，更是中华优秀传统文化的重要载体，值得我们去欣赏和传承。</p>`
+        
+        this.showExplanation = true
+      } catch (error) {
+        console.error('生成讲解失败:', error)
+      } finally {
+        this.isGeneratingExplanation = false
+      }
+    },
+
+    handleNewComment(newComment) {
+      // 将新评论添加到评论列表开头
+      this.comments.unshift(newComment)
     }
   }
 }
@@ -854,6 +963,8 @@ export default {
   font-size: 16px;
   margin: 0;
 }
+
+
 
 /* 响应式设计 */
 @media (max-width: 768px) {
