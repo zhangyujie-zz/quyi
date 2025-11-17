@@ -69,7 +69,13 @@
                 class="person-card"
               >
                 <div class="person-avatar">
-                  <i class="fas fa-user"></i>
+                  <img 
+                    v-if="person.avatarUrl" 
+                    :src="person.avatarUrl" 
+                    :alt="person.name"
+                    @error="handleImageError"
+                  >
+                  <i v-else class="fas fa-user"></i>
                 </div>
                 <div class="person-info">
                   <h4>{{ person.name }}</h4>
@@ -89,6 +95,13 @@
           <h3>推荐视频</h3>
           <div v-if="displayVideo" class="video-card">
             <div class="video-thumbnail">
+              <img 
+                v-if="displayVideo.thumbnail_url" 
+                :src="displayVideo.thumbnail_url" 
+                :alt="displayVideo.title"
+                @error="handleImageError"
+              >
+              <div v-else class="thumbnail-placeholder"></div>
               <i class="fas fa-play-circle"></i>
             </div>
             <div class="video-info">
@@ -204,7 +217,7 @@ export default {
             achievement: rep.artistic_achievement,
             status: rep.status,
             statusText: rep.status_text,
-            avatarUrl: rep.avatar_url,
+            avatarUrl: this.getAvatarUrl(rep.name, rep.avatar_url),
             biography: rep.biography
           }))
         } else {
@@ -280,22 +293,22 @@ export default {
       // 静态代表人物数据
       const mockRepresentatives = {
         1: [
-          { id: 1, name: '郭德纲', birthPeriod: '1973-', masterpiece: '《我要幸福》', achievement: '德云社创始人，现代相声代表人物', status: 'living', statusText: '当代大师' },
-          { id: 2, name: '于谦', birthPeriod: '1969-', masterpiece: '《我是黑社会》', achievement: '德云社搭档，相声表演艺术家', status: 'living', statusText: '艺术家' },
-          { id: 3, name: '马三立', birthPeriod: '1914-2003', masterpiece: '《买猴》', achievement: '相声泰斗，马派相声创始人', status: 'master', statusText: '泰斗' },
-          { id: 4, name: '侯宝林', birthPeriod: '1917-1993', masterpiece: '《戏剧与方言》', achievement: '相声艺术大师，创立"侯派"风格', status: 'master', statusText: '大师' }
+          { id: 1, name: '郭德纲', birthPeriod: '1973-', masterpiece: '《我要幸福》', achievement: '德云社创始人，现代相声代表人物', status: 'living', statusText: '当代大师', avatarUrl: this.getAvatarUrl('郭德纲') },
+          { id: 2, name: '于谦', birthPeriod: '1969-', masterpiece: '《我是黑社会》', achievement: '德云社搭档，相声表演艺术家', status: 'living', statusText: '艺术家', avatarUrl: this.getAvatarUrl('于谦') },
+          { id: 3, name: '马三立', birthPeriod: '1914-2003', masterpiece: '《买猴》', achievement: '相声泰斗，马派相声创始人', status: 'master', statusText: '泰斗', avatarUrl: this.getAvatarUrl('马三立') },
+          { id: 4, name: '侯宝林', birthPeriod: '1917-1993', masterpiece: '《戏剧与方言》', achievement: '相声艺术大师，创立"侯派"风格', status: 'master', statusText: '大师', avatarUrl: this.getAvatarUrl('侯宝林') }
         ],
         2: [
-          { id: 1, name: '单田芳', birthPeriod: '1934-2018', masterpiece: '《隋唐演义》', achievement: '评书表演艺术家，"单氏评书"创始人', status: 'master', statusText: '艺术大师' },
-          { id: 2, name: '刘兰芳', birthPeriod: '1944-', masterpiece: '《岳飞传》', achievement: '评书表演艺术家，中国曲艺家协会名誉主席', status: 'living', statusText: '艺术家' },
-          { id: 3, name: '袁阔成', birthPeriod: '1929-2015', masterpiece: '《三国演义》', achievement: '评书表演艺术家，"袁派评书"创始人', status: 'master', statusText: '大师' },
-          { id: 4, name: '田连元', birthPeriod: '1941-', masterpiece: '《杨家将》', achievement: '评书表演艺术家，现代评书改革者', status: 'living', statusText: '改革家' }
+          { id: 1, name: '单田芳', birthPeriod: '1934-2018', masterpiece: '《隋唐演义》', achievement: '评书表演艺术家，"单氏评书"创始人', status: 'master', statusText: '艺术大师', avatarUrl: this.getAvatarUrl('单田芳') },
+          { id: 2, name: '刘兰芳', birthPeriod: '1944-', masterpiece: '《岳飞传》', achievement: '评书表演艺术家，中国曲艺家协会名誉主席', status: 'living', statusText: '艺术家', avatarUrl: this.getAvatarUrl('刘兰芳') },
+          { id: 3, name: '袁阔成', birthPeriod: '1929-2015', masterpiece: '《三国演义》', achievement: '评书表演艺术家，"袁派评书"创始人', status: 'master', statusText: '大师', avatarUrl: null },
+          { id: 4, name: '田连元', birthPeriod: '1941-', masterpiece: '《杨家将》', achievement: '评书表演艺术家，现代评书改革者', status: 'living', statusText: '改革家', avatarUrl: null }
         ],
         3: [
-          { id: 1, name: '梅兰芳', birthPeriod: '1894-1961', masterpiece: '《贵妃醉酒》', achievement: '京剧表演艺术家，"梅派"创始人', status: 'master', statusText: '艺术大师' },
-          { id: 2, name: '程砚秋', birthPeriod: '1904-1958', masterpiece: '《锁麟囊》', achievement: '京剧表演艺术家，"程派"创始人', status: 'master', statusText: '大师' },
-          { id: 3, name: '尚小云', birthPeriod: '1900-1976', masterpiece: '《昭君出塞》', achievement: '京剧表演艺术家，"尚派"创始人', status: 'master', statusText: '大师' },
-          { id: 4, name: '荀慧生', birthPeriod: '1900-1968', masterpiece: '《红娘》', achievement: '京剧表演艺术家，"荀派"创始人', status: 'master', statusText: '大师' }
+          { id: 1, name: '梅兰芳', birthPeriod: '1894-1961', masterpiece: '《贵妃醉酒》', achievement: '京剧表演艺术家，"梅派"创始人', status: 'master', statusText: '艺术大师', avatarUrl: this.getAvatarUrl('梅兰芳') },
+          { id: 2, name: '程砚秋', birthPeriod: '1904-1958', masterpiece: '《锁麟囊》', achievement: '京剧表演艺术家，"程派"创始人', status: 'master', statusText: '大师', avatarUrl: this.getAvatarUrl('程砚秋') },
+          { id: 3, name: '尚小云', birthPeriod: '1900-1976', masterpiece: '《昭君出塞》', achievement: '京剧表演艺术家，"尚派"创始人', status: 'master', statusText: '大师', avatarUrl: null },
+          { id: 4, name: '荀慧生', birthPeriod: '1900-1968', masterpiece: '《红娘》', achievement: '京剧表演艺术家，"荀派"创始人', status: 'master', statusText: '大师', avatarUrl: null }
         ]
       }
       
@@ -371,25 +384,74 @@ export default {
           title: '相声名段欣赏 - 郭德纲经典相声',
           description: '郭德纲经典相声表演，包含多个经典段子，展现相声艺术的魅力。',
           duration: 1800, // 30分钟
-          views_count: 25000
+          views_count: 25000,
+          thumbnail_url: '/resource/image/首页相声.png'
         },
         2: {
           id: 2,
           title: '评书精选 - 单田芳《隋唐演义》',
           description: '单田芳大师经典评书《隋唐演义》，讲述隋唐历史英雄故事。',
           duration: 2400, // 40分钟
-          views_count: 18000
+          views_count: 18000,
+          thumbnail_url: '/resource/image/首页评书.jpg'
         },
         3: {
           id: 3,
           title: '京剧经典 - 梅兰芳《贵妃醉酒》',
           description: '梅兰芳大师经典京剧表演《贵妃醉酒》，展现京剧艺术的精髓。',
           duration: 1500, // 25分钟
-          views_count: 12000
+          views_count: 12000,
+          thumbnail_url: '/resource/image/首页京剧.jpg'
         }
       }
       
       this.displayVideo = mockVideos[this.id] || mockVideos[1]
+    },
+    
+    getAvatarUrl(name, avatarUrl) {
+      // 如果有数据库中的头像URL，直接使用
+      if (avatarUrl) {
+        return avatarUrl
+      }
+      
+      // 否则使用本地图片
+      const nameMap = {
+        '侯宝林': '/resource/image/representative%20figure/侯宝林.jpg',
+        '马三立': '/resource/image/representative%20figure/马三立.jpg', 
+        '郭德纲': '/resource/image/representative%20figure/郭德纲.jpg',
+        '于谦': '/resource/image/representative%20figure/于谦.jpg',
+        '单田芳': '/resource/image/representative%20figure/单田芳.jpg',
+        '刘兰芳': '/resource/image/representative%20figure/刘兰芳.jpg',
+        '梅兰芳': '/resource/image/representative%20figure/梅兰芳.jpg',
+        '程砚秋': '/resource/image/representative%20figure/程砚秋.jpg'
+      }
+      
+      return nameMap[name] || null
+    },
+    
+    handleImageError(event) {
+      // 图片加载失败时显示默认图标
+      event.target.style.display = 'none'
+      const parent = event.target.parentElement
+      if (parent) {
+        const icon = parent.querySelector('.fa-user')
+        if (icon) {
+          icon.style.display = 'block'
+        }
+      }
+    },
+    
+    handleImageError(event) {
+      // 图片加载失败时显示占位符
+      const img = event.target
+      const parent = img.parentElement
+      if (parent) {
+        const placeholder = parent.querySelector('.thumbnail-placeholder')
+        if (placeholder) {
+          placeholder.style.display = 'block'
+        }
+        img.style.display = 'none'
+      }
     },
     
     playVideo(videoId) {
@@ -569,6 +631,19 @@ export default {
   color: white;
   font-size: 24px;
   margin: 0 auto 15px;
+  overflow: hidden;
+  position: relative;
+}
+
+.person-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.person-avatar .fa-user {
+  display: none;
 }
 
 .person-info {
@@ -677,6 +752,27 @@ export default {
   justify-content: center;
   color: white;
   font-size: 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.video-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.thumbnail-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #8B4513, #A0522D);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
 }
 
 .video-info {

@@ -49,23 +49,33 @@
           @click="playVideo(video)"
         >
           <div class="video-thumbnail">
+            <img 
+              v-if="video.thumbnail_url" 
+              :src="video.thumbnail_url" 
+              :alt="video.title"
+              @error="handleImageError"
+            >
+            <div v-else class="thumbnail-placeholder"></div>
             <i class="fas fa-play-circle play-icon"></i>
             <div class="video-duration">{{ formatDuration(video.duration) }}</div>
             <div class="video-category">{{ getCategoryName(video.category_id) }}</div>
           </div>
           <div class="video-info">
-            <h3 class="video-title">{{ video.title }}</h3>
-            <p class="video-description">{{ video.description }}</p>
-            <div class="video-meta">
+            <div class="video-all-horizontal">
+              <h3 class="video-title">{{ video.title }}</h3>
               <span class="video-performer">
                 <i class="fas fa-user"></i> {{ video.performer || '未知表演者' }}
               </span>
+              <span class="video-category horizontal">
+                <i class="fas fa-tag"></i> {{ getCategoryName(video.category_id) }}
+              </span>
+              <p class="video-description">{{ video.description }}</p>
               <span class="video-views">
                 <i class="fas fa-eye"></i> {{ video.views_count || 0 }} 次观看
               </span>
-            </div>
-            <div class="video-tags">
-              <span v-for="tag in (video.tags || [])" :key="tag" class="tag">{{ tag }}</span>
+              <div class="video-tags">
+                <span v-for="tag in (video.tags || [])" :key="tag" class="tag">{{ tag }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -200,6 +210,7 @@ export default {
           views_count: 25000,
           category_id: 1,
           performer: '郭德纲',
+          thumbnail_url: '/resource/image/首页相声.png',
           tags: ['相声', '经典', '幽默']
         },
         {
@@ -210,6 +221,7 @@ export default {
           views_count: 18000,
           category_id: 2,
           performer: '单田芳',
+          thumbnail_url: '/resource/image/首页评书.jpg',
           tags: ['评书', '历史', '经典']
         },
         {
@@ -220,6 +232,7 @@ export default {
           views_count: 12000,
           category_id: 3,
           performer: '梅兰芳',
+          thumbnail_url: '/resource/image/首页京剧.jpg',
           tags: ['京剧', '经典', '艺术']
         }
       ]
@@ -238,6 +251,7 @@ export default {
           views_count: 25000,
           category_id: 1,
           performer: '郭德纲',
+          thumbnail_url: '/resource/image/首页相声.png',
           tags: ['相声', '经典', '幽默']
         },
         {
@@ -248,6 +262,7 @@ export default {
           views_count: 18000,
           category_id: 2,
           performer: '单田芳',
+          thumbnail_url: '/resource/image/首页评书.jpg',
           tags: ['评书', '历史', '经典']
         },
         {
@@ -258,6 +273,7 @@ export default {
           views_count: 12000,
           category_id: 3,
           performer: '梅兰芳',
+          thumbnail_url: '/resource/image/首页京剧.jpg',
           tags: ['京剧', '经典', '艺术']
         }
       ]
@@ -325,6 +341,19 @@ export default {
           this.page--
         }
       }
+    },
+    
+    handleImageError(event) {
+      // 图片加载失败时显示占位符
+      const img = event.target
+      const parent = img.parentElement
+      if (parent) {
+        const placeholder = parent.querySelector('.thumbnail-placeholder')
+        if (placeholder) {
+          placeholder.style.display = 'block'
+        }
+        img.style.display = 'none'
+      }
     }
   }
 }
@@ -379,6 +408,26 @@ export default {
   align-items: center;
   justify-content: center;
   color: white;
+  overflow: hidden;
+}
+
+.video-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.thumbnail-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #8B4513, #A0522D);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
 }
 
 .play-icon {
@@ -406,42 +455,77 @@ export default {
   position: absolute;
   top: 10px;
   left: 10px;
-  background: rgba(139, 69, 19, 0.9);
+  background: #8B4513;
   color: white;
-  padding: 0.25rem 0.5rem;
+  padding: 0.3rem 0.6rem;
   border-radius: 4px;
   font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .video-info {
   padding: 1.5rem;
 }
 
+.video-all-horizontal {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .video-title {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
   color: #2c3e50;
-  line-height: 1.4;
+  line-height: 1.3;
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .video-description {
   color: #666;
-  margin-bottom: 1rem;
-  line-height: 1.5;
+  line-height: 1.4;
+  font-size: 0.9rem;
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
 }
 
-.video-meta {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-  color: #888;
+.video-performer,
+.video-views {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #666;
+  white-space: nowrap;
+}
+
+.video-category.horizontal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #666;
+  white-space: nowrap;
 }
 
 .video-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.3rem;
+  margin: 0;
+}
+
+.tag {
+  background: #e74c3c;
+  padding: 0.2rem 0.4rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  color: white;
+  white-space: nowrap;
+  font-weight: 500;
 }
 
 .tag {
@@ -542,8 +626,9 @@ export default {
     grid-template-columns: 1fr;
   }
   
-  .video-info {
+  .video-all-horizontal {
     flex-direction: column;
+    align-items: flex-start;
     gap: 0.5rem;
   }
   
