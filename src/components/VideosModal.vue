@@ -76,39 +76,42 @@
         
         <!-- 评论列表 -->
         <div class="comments-list">
-          <div v-if="comments.length === 0" class="no-comments">
-            <i class="fas fa-comments"></i>
-            <p>暂无评论，快来抢沙发吧！</p>
+          <!-- 评论加载状态 -->
+          <div v-if="isLoadingComments" class="comments-loading">
+            <div class="loading-spinner small"></div>
+            <p>正在加载评论...</p>
           </div>
           
-          <div 
-            v-for="comment in comments" 
-            :key="comment.id"
-            class="comment-item"
-          >
-            <div class="comment-avatar">
-              <img 
-                v-if="comment.avatar_url" 
-                :src="comment.avatar_url" 
-                :alt="comment.user_name"
-                @error="handleImageError"
-              >
-              <i v-else class="fas fa-user"></i>
+          <!-- 评论内容 -->
+          <template v-else>
+            <div v-if="comments.length === 0" class="no-comments">
+              <i class="fas fa-comments"></i>
+              <p>暂无评论，快来抢沙发吧！</p>
             </div>
-            <div class="comment-content">
-              <div class="comment-header">
-                <span class="username">{{ comment.user_name }}</span>
-                <span class="comment-time">{{ formatTime(comment.created_at) }}</span>
+            
+            <div 
+              v-for="comment in comments" 
+              :key="comment.id"
+              class="comment-item"
+            >
+              <div class="comment-avatar">
+                <img 
+                  v-if="comment.avatar_url" 
+                  :src="comment.avatar_url" 
+                  :alt="comment.user_name"
+                  @error="handleImageError"
+                >
+                <i v-else class="fas fa-user"></i>
               </div>
+              <div class="comment-content">
+                <div class="comment-header">
+                  <span class="username">{{ comment.user_name }}</span>
+                  <span class="comment-time">{{ formatTime(comment.created_at) }}</span>
+                </div>
               <p class="comment-text">{{ comment.content }}</p>
-                  <div class="comment-actions">
-                    <button class="like-btn" @click="likeComment(comment)">
-                      <i class="fas fa-thumbs-up"></i>
-                      {{ comment.likes_count || 0 }}
-                    </button>
-                  </div>
+              </div>
             </div>
-          </div>
+          </template>
         </div>
       </div>
     </div>
@@ -158,12 +161,17 @@ export default {
     showExplanation: {
       type: Boolean,
       default: false
+    },
+    isLoadingComments: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
     return {
       newComment: '',
-      isSubmittingComment: false
+      isSubmittingComment: false,
+      isLoadingComments: false
     }
   },
   methods: {
@@ -244,20 +252,7 @@ export default {
       }
     },
 
-    async likeComment(comment) {
-      try {
-        const newLikesCount = await CommentService.likeComment(comment.id)
-        
-        // 更新评论的点赞数
-        const commentIndex = this.comments.findIndex(c => c.id === comment.id)
-        if (commentIndex !== -1) {
-          this.comments[commentIndex].likes_count = newLikesCount
-        }
-      } catch (error) {
-        console.error('点赞失败:', error)
-        // 静默失败，不显示错误提示
-      }
-    }
+
   }
 }
 </script>
@@ -568,6 +563,26 @@ export default {
   opacity: 0.5;
 }
 
+/* 评论加载状态 */
+.comments-loading {
+  text-align: center;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  color: #666;
+}
+
+.comments-loading .loading-spinner.small {
+  margin: 0;
+}
+
+.comments-loading p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
 .comment-item {
   display: flex;
   gap: 1rem;
@@ -631,29 +646,7 @@ export default {
   word-wrap: break-word;
 }
 
-.comment-actions {
-  display: flex;
-  gap: 1rem;
-}
 
-.like-btn {
-  background: none;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.85rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-}
-
-.like-btn:hover {
-  background: #f0f0f0;
-  color: rgba(139, 69, 19);
-}
 
 /* AI讲解弹窗 */
 .ai-explanation-modal {

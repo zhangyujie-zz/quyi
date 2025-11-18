@@ -412,26 +412,38 @@ export class VideoService {
    * @param {Object} options - 搜索选项
    */
   static async searchVideos(query, options = {}) {
-    const { page = 1, pageSize = 12 } = options
+    const { page = 1, pageSize = 12, categoryId = null } = options
 
     try {
-      // 使用搜索函数
-      const { data, error } = await supabase
-        .rpc('search_videos', { search_query: query })
+      // 构建搜索查询
+      let dbQuery = supabase
+        .from('videos')
+        .select('*')
+      
+      // 添加搜索条件
+      if (query.trim()) {
+        // 搜索标题、描述、表演者
+        dbQuery = dbQuery.or(`title.ilike.%${query}%,description.ilike.%${query}%,performer.ilike.%${query}%`)
+      }
+      
+      // 添加分类筛选
+      if (categoryId) {
+        dbQuery = dbQuery.eq('category_id', categoryId)
+      }
+      
+      // 执行查询并分页
+      const { data, error, count } = await dbQuery
+        .order('created_at', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1)
       
       if (error) throw error
 
-      // 手动分页
-      const startIndex = (page - 1) * pageSize
-      const endIndex = startIndex + pageSize
-      const paginatedData = (data || []).slice(startIndex, endIndex)
-
       return {
-        videos: paginatedData,
-        total: (data || []).length,
+        videos: data || [],
+        total: count || 0,
         page,
         pageSize,
-        totalPages: Math.ceil((data || []).length / pageSize)
+        totalPages: Math.ceil((count || 0) / pageSize)
       }
     } catch (error) {
       console.error('搜索视频失败:', error)

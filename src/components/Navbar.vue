@@ -17,18 +17,7 @@
           <router-link to="/ai-chat" class="nav-link">AI对话</router-link>
         </div>
         
-        <div class="nav-search">
-          <div class="search-box">
-            <i class="fas fa-search search-icon"></i>
-            <input 
-              type="text" 
-              class="search-input" 
-              placeholder="搜索曲艺内容..."
-              v-model="searchQuery"
-              @keyup.enter="handleSearch"
-            >
-          </div>
-        </div>
+
       </div>
     </div>
   </nav>
@@ -94,9 +83,7 @@ export default {
   color: white;
 }
 
-.nav-search {
-  flex: 0 1 300px;
-}
+
 
 @media (max-width: 768px) {
   .nav-content {
@@ -106,11 +93,6 @@ export default {
   
   .nav-links {
     gap: 1rem;
-  }
-  
-  .nav-search {
-    width: 100%;
-    max-width: 300px;
   }
 }
 </style>

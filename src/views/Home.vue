@@ -3,8 +3,14 @@
     <!-- 轮播图区域 -->
     <section class="carousel-section">
       <div class="carousel-container">
+        <!-- 轮播图加载状态 -->
+        <div v-if="loading" class="carousel-loading">
+          <div class="loading-spinner"></div>
+          <p>正在加载轮播图...</p>
+        </div>
+        
         <!-- 轮播图主体 -->
-        <div class="carousel">
+        <div v-else-if="carouselSlides.length > 0" class="carousel">
           <div 
             v-for="(slide, index) in carouselSlides" 
             :key="slide.id"
@@ -22,8 +28,14 @@
           </div>
         </div>
         
+        <!-- 轮播图为空时的占位 -->
+        <div v-else class="carousel-placeholder">
+          <i class="fas fa-images"></i>
+          <p>暂无轮播图内容</p>
+        </div>
+        
         <!-- 轮播图指示器 -->
-        <div class="carousel-indicators">
+        <div v-if="carouselSlides.length > 1" class="carousel-indicators">
           <button 
             v-for="(slide, index) in carouselSlides" 
             :key="slide.id"
@@ -34,10 +46,10 @@
         </div>
         
         <!-- 轮播图导航按钮 -->
-        <button class="carousel-nav prev" @click="prevSlide">
+        <button v-if="carouselSlides.length > 1" class="carousel-nav prev" @click="prevSlide">
           <i class="fas fa-chevron-left"></i>
         </button>
-        <button class="carousel-nav next" @click="nextSlide">
+        <button v-if="carouselSlides.length > 1" class="carousel-nav next" @click="nextSlide">
           <i class="fas fa-chevron-right"></i>
         </button>
       </div>
@@ -137,9 +149,15 @@ export default {
   
   methods: {
     async loadData() {
+      this.loading = true
+      
       try {
-        // 加载轮播图数据
-        const carouselData = await VideoService.getCarouselSlides()
+        // 同时加载轮播图数据和近期动态
+        const [carouselData, eventsData] = await Promise.all([
+          VideoService.getCarouselSlides(),
+          VideoService.getRecentEvents()
+        ])
+        
         console.log('从数据库获取的轮播图数据:', carouselData)
         
         if (carouselData && carouselData.length > 0) {
@@ -152,11 +170,9 @@ export default {
           console.log('成功加载数据库轮播图数据:', this.carouselSlides)
         } else {
           console.log('数据库中没有轮播图数据，使用默认数据')
-          this.setDefaultData()
+          this.carouselSlides = []
         }
         
-        // 加载近期动态
-        const eventsData = await VideoService.getRecentEvents()
         console.log('从数据库获取的近期动态数据:', eventsData)
         
         if (eventsData && eventsData.length > 0) {
@@ -188,33 +204,7 @@ export default {
     },
     
     setDefaultData() {
-      this.carouselSlides = [
-        {
-          id: 1,
-          title: '传统相声艺术',
-          description: '品味经典相声，感受语言艺术的魅力',
-          image: 'https://images.unsplash.com/photo-1517330323742-98449c5d72f5?w=1200&h=600&fit=crop'
-        },
-        {
-          id: 2,
-          title: '精彩评书表演',
-          description: '聆听历史故事，沉浸于评书的艺术世界',
-          image: 'https://images.unsplash.com/photo-1516900448138-898720e93639?w=1200&h=600&fit=crop'
-        },
-        {
-          id: 3,
-          title: '京剧国粹经典',
-          description: '欣赏国粹艺术，传承中华文化精髓',
-          image: 'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=1200&h=600&fit=crop'
-        },
-        {
-          id: 4,
-          title: '地方戏曲荟萃',
-          description: '探索各地特色戏曲，体验多元文化魅力',
-          image: 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=1200&h=600&fit=crop'
-        }
-      ]
-      
+      this.carouselSlides = []
       this.recentEvents = this.getDefaultEvents()
     },
     
@@ -356,6 +346,60 @@ export default {
   position: relative;
   height: 100%;
   width: 100%;
+}
+
+/* 轮播图加载状态 */
+.carousel-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: linear-gradient(45deg, rgba(139, 69, 19, 0.6), rgba(160, 82, 45, 0.6));
+  color: white;
+}
+
+.carousel-loading .loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+.carousel-loading p {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+/* 轮播图占位 */
+.carousel-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: linear-gradient(45deg, #8B4513, #A0522D);
+  color: white;
+}
+
+.carousel-placeholder i {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.carousel-placeholder p {
+  font-size: 1.2rem;
+  margin: 0;
+  opacity: 0.8;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .carousel {

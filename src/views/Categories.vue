@@ -27,9 +27,20 @@
     <!-- 主内容区域 -->
     <main class="main-content" :class="{ 'sidebar-expanded': sidebarOpen }">
       <div class="container">
-        <h1 class="page-title">
-          {{ activeNavName ? `${activeNavName}` : '' }}
-        </h1>
+        <div class="categories-header">
+          <h1 class="page-title">
+            {{ activeNavName ? `${activeNavName}` : '' }}
+          </h1>
+          <div class="search-box category-search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="搜索曲艺分类..."
+              v-model="searchQuery"
+            >
+          </div>
+        </div>
         
         <!-- 加载状态 -->
         <div v-if="isLoading" class="loading-container">
@@ -61,7 +72,7 @@
             <p class="category-description">{{ category.description }}</p>
             <div class="category-stats">
               <span><i class="fas fa-video"></i> {{ category.videoCount }} 个视频</span>
-              <span><i class="fas fa-users"></i> {{ category.studentCount }} 人学习</span>
+              <span><i class="fas fa-users"></i> {{ category.studentCount }} 人查看</span>
             </div>
             <button class="btn btn-secondary" @click.stop="viewCategoryDetails(category.id)">
               查看详情 <i class="fas fa-eye"></i>
@@ -89,6 +100,7 @@ export default {
       activeNav: 1,
       isLoading: false,
       errorMessage: '',
+      searchQuery: '',
       categoryNavs: [
         { id: 1, name: '全部' },
         { id: 2, name: '语言类' },
@@ -100,10 +112,21 @@ export default {
   },
   computed: {
     filteredCategories() {
+      let list = []
       if (this.activeNav === 1) {
-        return this.categories
+        list = this.categories
+      } else {
+        list = this.categories.filter(cat => cat.type === this.activeNav)
       }
-      return this.categories.filter(cat => cat.type === this.activeNav)
+      if (!this.searchQuery || !this.searchQuery.trim()) {
+        return list
+      }
+      const query = this.searchQuery.trim().toLowerCase()
+      return list.filter(cat => {
+        const name = (cat.name || '').toLowerCase()
+        const desc = (cat.description || '').toLowerCase()
+        return name.includes(query) || desc.includes(query)
+      })
     },
     
     activeNavName() {
@@ -239,10 +262,6 @@ export default {
     
     viewCategoryDetails(categoryId) {
       this.$router.push(`/category/${categoryId}`)
-    },
-    
-    viewCategoryDetails(categoryId) {
-      this.$router.push(`/category/${categoryId}`)
     }
   }
 }
@@ -275,8 +294,6 @@ export default {
   align-items: center;
   background: white;
 }
-
-
 
 .sidebar-toggle {
   display: none;
@@ -347,11 +364,26 @@ export default {
   margin-left: -280px;
 }
 
-.page-title {
-  text-align: center;
-  font-size: 2.5rem;
+.categories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  position: relative;
+}
+
+.page-title {
+  font-size: 2.5rem;
   color: #2c3e50;
+}
+
+.category-search-box {
+  min-width: 260px;
+  position: absolute;
+  right: 0;
+  top: -25px;
 }
 
 .category-content {
@@ -470,6 +502,18 @@ export default {
   
   .page-title {
     font-size: 2rem;
+  }
+  
+  .categories-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .category-search-box {
+    position: static;
+    width: 100%;
   }
   
   .category-content {

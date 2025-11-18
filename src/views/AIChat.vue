@@ -52,7 +52,19 @@
                   <i v-else class="fas fa-robot"></i>
                 </div>
                 <div class="message-content">
-                  <div class="message-text">{{ message.content }}</div>
+                  <!-- 用户消息保持纯文本 -->
+                  <div 
+                    v-if="message.role === 'user'" 
+                    class="message-text"
+                  >
+                    {{ message.content }}
+                  </div>
+                  <!-- AI 消息支持基础 HTML 格式（段落/换行） -->
+                  <div 
+                    v-else 
+                    class="message-text ai-message-text"
+                    v-html="message.content"
+                  ></div>
                   <div class="message-time">{{ formatTime(message.timestamp) }}</div>
                 </div>
               </div>
@@ -161,8 +173,9 @@ export default {
         // 发送消息给AI
         const response = await AIService.sendMessage(message, conversationHistory)
         
-        // 添加AI回复
-        this.addMessage('assistant', response)
+        // 对AI回复做基础格式化（段落 + 换行），再添加到对话中
+        const formatted = this.formatAIResponse(response)
+        this.addMessage('assistant', formatted)
         
       } catch (error) {
         console.error('发送消息失败:', error)
@@ -211,6 +224,19 @@ export default {
         hour: '2-digit',
         minute: '2-digit'
       })
+    },
+    
+    // 将AI返回的纯文本转换成简单HTML，保留段落和换行
+    formatAIResponse(rawText) {
+      if (!rawText) return ''
+      const text = String(rawText).trim()
+      if (!text) return ''
+
+      return text
+        .replace(/\r?\n{2,}/g, '</p><p>')
+        .replace(/\r?\n/g, '<br>')
+        .replace(/^/, '<p>')
+        .replace(/$/, '</p>')
     }
   }
 }

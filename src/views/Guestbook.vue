@@ -1,18 +1,13 @@
 <template>
   <div class="guestbook">
     <div class="container">
-      <!-- 页面标题 -->
-      <div class="guestbook-header">
-        <h1 class="page-title">访客留言</h1>
-        <p class="page-subtitle">欢迎留下您的宝贵意见和建议</p>
-      </div>
-
-      <!-- 留言表单 -->
-      <div class="guestbook-form-section">
-        <div class="form-card">
-          <h3>发表留言</h3>
-          <form @submit.prevent="submitGuestbook" class="guestbook-form">
-            <div class="form-row">
+      <!-- 主要内容区域 - 左右结构 -->
+      <div class="guestbook-main">
+        <!-- 左侧：留言表单 -->
+        <div class="guestbook-left">
+          <div class="form-card">
+            <h3>发表留言</h3>
+            <form @submit.prevent="submitGuestbook" class="guestbook-form">
               <div class="form-group">
                 <label for="contactName">您的姓名</label>
                 <input
@@ -24,9 +19,7 @@
                   maxlength="100"
                 >
               </div>
-            </div>
 
-            <div class="form-row">
               <div class="form-group">
                 <label for="contactInfo">联系方式 *</label>
                 <input
@@ -38,11 +31,9 @@
                   required
                   maxlength="255"
                 >
-                <small class="form-hint">请填写电话或邮箱，至少填写一个</small>
+                <small class="form-hint">请填写电话或邮箱</small>
               </div>
-            </div>
 
-            <div class="form-row">
               <div class="form-group full-width">
                 <label for="content">留言内容 *</label>
                 <textarea
@@ -50,7 +41,7 @@
                   v-model="formData.content"
                   placeholder="请输入您的留言内容..."
                   class="form-textarea"
-                  rows="5"
+                  rows="6"
                   required
                   maxlength="1000"
                 ></textarea>
@@ -58,85 +49,83 @@
                   {{ formData.content.length }}/1000
                 </div>
               </div>
-            </div>
 
-            <div class="form-actions">
-              <button
-                type="submit"
-                :disabled="isSubmitting"
-                class="submit-btn"
-              >
-                <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>
-                <i v-else class="fas fa-paper-plane"></i>
-                {{ isSubmitting ? '提交中...' : '提交留言' }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- 加载状态 -->
-      <div v-if="isLoading" class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>正在加载留言...</p>
-      </div>
-
-      <!-- 错误提示 -->
-      <div v-else-if="errorMessage" class="error-container">
-        <i class="fas fa-exclamation-triangle"></i>
-        <p>{{ errorMessage }}</p>
-        <button @click="loadGuestbooks" class="btn btn-secondary">
-          重新加载
-        </button>
-      </div>
-
-      <!-- 留言列表 -->
-      <div v-else-if="guestbooks.length > 0" class="guestbook-list">
-        <h3 class="list-title">最新留言 ({{ totalCount }})</h3>
-        
-        <div 
-          v-for="guestbook in guestbooks" 
-          :key="guestbook.id"
-          class="guestbook-item card"
-        >
-          <div class="guestbook-content">
-            <div class="guestbook-header">
-              <span class="guest-name">{{ guestbook.contact_name }}</span>
-              <span class="guestbook-time">{{ formatTime(guestbook.created_at) }}</span>
-            </div>
-            <p class="guestbook-text">{{ guestbook.content }}</p>
-            <div class="guestbook-footer">
-              <button 
-                class="like-btn"
-                @click="likeGuestbook(guestbook)"
-                :disabled="isLiking === guestbook.id"
-              >
-                <i class="fas fa-thumbs-up"></i>
-                {{ guestbook.likes_count || 0 }}
-              </button>
-            </div>
+              <div class="form-actions">
+                <button
+                  type="submit"
+                  :disabled="isSubmitting"
+                  class="submit-btn"
+                >
+                  <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>
+                  <i v-else class="fas fa-paper-plane"></i>
+                  {{ isSubmitting ? '提交中...' : '提交留言' }}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
 
-        <!-- 加载更多 -->
-        <div v-if="hasMore" class="load-more">
-          <button 
-            @click="loadMore" 
-            :disabled="isLoadingMore"
-            class="btn"
-          >
-            <i v-if="isLoadingMore" class="fas fa-spinner fa-spin"></i>
-            <i v-else class="fas fa-arrow-down"></i>
-            {{ isLoadingMore ? '加载中...' : '加载更多' }}
-          </button>
-        </div>
-      </div>
+        <!-- 右侧：留言列表 -->
+        <div class="guestbook-right">
+          <!-- 加载状态 -->
+          <div v-if="isLoading" class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>正在加载留言...</p>
+          </div>
 
-      <!-- 空状态 -->
-      <div v-else class="empty-state">
-        <i class="fas fa-comments"></i>
-        <h3>暂无留言</h3>
-        <p>成为第一个发表留言的人吧！</p>
+          <!-- 错误提示 -->
+          <div v-else-if="errorMessage" class="error-container">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>{{ errorMessage }}</p>
+            <button @click="loadGuestbooks" class="btn btn-secondary">
+              重新加载
+            </button>
+          </div>
+
+          <!-- 留言列表 -->
+          <div v-else-if="guestbooks.length > 0" class="guestbook-list">
+            <div class="list-header">
+              <h3 class="list-title">最新留言 ({{ totalCount }})</h3>
+            </div>
+            
+            <div class="guestbook-items">
+              <div 
+                v-for="guestbook in guestbooks" 
+                :key="guestbook.id"
+                class="guestbook-item card"
+              >
+                <div class="guestbook-content">
+                  <div class="guestbook-header">
+                    <span class="guest-name">{{ guestbook.contact_name }}</span>
+                    <span class="guestbook-time">{{ formatTime(guestbook.created_at) }}</span>
+                  </div>
+                  <p class="guestbook-text">{{ guestbook.content }}</p>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- 加载更多 -->
+            <div v-if="hasMore" class="load-more">
+              <button 
+                @click="loadMore" 
+                :disabled="isLoadingMore"
+                class="btn"
+              >
+                <i v-if="isLoadingMore" class="fas fa-spinner fa-spin"></i>
+                <i v-else class="fas fa-arrow-down"></i>
+                {{ isLoadingMore ? '加载中...' : '加载更多' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- 空状态 -->
+          <div v-else class="empty-state">
+            <i class="fas fa-comments"></i>
+            <h3>暂无留言</h3>
+            <p>成为第一个发表留言的人吧！</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -333,8 +322,8 @@ export default {
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
 }
 
 .form-card h3 {
@@ -480,10 +469,61 @@ export default {
   color: #d32f2f;
 }
 
+/* 主要内容区域 - 左右布局 */
+.guestbook-main {
+  display: flex;
+  margin-top: 2rem;
+}
+
+/* 左侧：留言表单 */
+.guestbook-left {
+  flex: 1;
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+  margin-right: 2rem;
+  max-width: none;
+}
+
+/* 右侧：留言列表 */
+.guestbook-right {
+  flex: 0 0 320px;
+}
+
 /* 留言列表 */
 .guestbook-list {
-  max-width: 800px;
-  margin: 0 auto;
+  height: 100%;
+}
+
+.guestbook-items {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* 确保滚动条可见 */
+.guestbook-items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.guestbook-items::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.guestbook-items::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.guestbook-items::-webkit-scrollbar-thumb:hover {
+  background: #8B4513;
+}
+
+.list-header {
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #8B4513;
+  padding-bottom: 0.5rem;
 }
 
 .list-title {
@@ -494,8 +534,8 @@ export default {
 }
 
 .guestbook-item {
-  margin-bottom: 1.5rem;
-  padding: 1.5rem;
+  margin-bottom: 0.8rem;
+  padding: 1rem;
   transition: transform 0.3s ease;
 }
 
@@ -531,35 +571,7 @@ export default {
   word-wrap: break-word;
 }
 
-.guestbook-footer {
-  display: flex;
-  justify-content: flex-end;
-}
 
-.like-btn {
-  background: none;
-  border: 1px solid #e0e0e0;
-  color: #666;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-}
-
-.like-btn:hover:not(:disabled) {
-  background: #8B4513;
-  color: white;
-  border-color: #8B4513;
-}
-
-.like-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
 
 /* 加载更多 */
 .load-more {
@@ -624,6 +636,23 @@ export default {
     padding: 10px;
   }
   
+  .guestbook-main {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .guestbook-left {
+    flex: none;
+    width: 100%;
+    position: static;
+    margin-right: 0;
+  }
+  
+  .guestbook-right {
+    width: 100%;
+    flex: none;
+  }
+  
   .form-card {
     padding: 1.5rem;
   }
@@ -644,6 +673,11 @@ export default {
   
   .guestbook-item {
     padding: 1rem;
+  }
+  
+  .guestbook-items {
+    max-height: none;
+    padding-right: 0;
   }
 }
 </style>

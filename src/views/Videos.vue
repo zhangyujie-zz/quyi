@@ -13,7 +13,6 @@
               class="search-input" 
               placeholder="搜索曲艺视频..."
               v-model="searchQuery"
-              @input="handleSearch"
             >
           </div>
           <select v-model="selectedCategory" class="category-filter" @change="filterVideos">
@@ -104,6 +103,7 @@
       :isGeneratingExplanation="isGeneratingExplanation"
       :currentExplanation="currentExplanation"
       :showExplanation="showExplanation"
+      :isLoadingComments="isLoadingComments"
       @close="closeVideo"
       @new-comment="handleNewComment"
       @generate-explanation="generateExplanation"
@@ -142,12 +142,40 @@ export default {
       isSubmittingComment: false,
       isGeneratingExplanation: false,
       currentExplanation: '',
-      showExplanation: false
+      showExplanation: false,
+      isLoadingComments: false
     }
   },
   computed: {
     filteredVideos() {
-      return this.videos
+      let list = this.videos || []
+
+      // 分类过滤（双重保险，后端已经按分类查了一次）
+      if (this.selectedCategory) {
+        const catId = isNaN(Number(this.selectedCategory))
+          ? this.selectedCategory
+          : Number(this.selectedCategory)
+        list = list.filter(v => v.category_id === catId)
+      }
+
+      // 关键字前端模糊搜索
+      const keyword = this.searchQuery.trim().toLowerCase()
+      if (keyword) {
+        list = list.filter(v => {
+          const title = (v.title || '').toLowerCase()
+          const desc = (v.description || '').toLowerCase()
+          const performer = (v.performer || '').toLowerCase()
+          const tags = (v.tags || []).join(' ').toLowerCase()
+          return (
+            title.includes(keyword) ||
+            desc.includes(keyword) ||
+            performer.includes(keyword) ||
+            tags.includes(keyword)
+          )
+        })
+      }
+
+      return list
     },
     hasMoreVideos() {
       return this.page < this.totalPages
@@ -155,6 +183,9 @@ export default {
   },
   async mounted() {
     await this.loadVideos()
+    // 初始化时清空评论状态
+    this.comments = []
+    this.isLoadingComments = false
   },
   methods: {
     async loadCategories() {
@@ -243,79 +274,22 @@ export default {
       this.totalPages = 1
     },
     
-    useDefaultVideos() {
-      // 默认视频数据
-      this.videos = [
-        {
-          id: 1,
-          title: '相声名段欣赏 - 郭德纲经典相声',
-          description: '郭德纲经典相声表演，包含多个经典段子，展现相声艺术的魅力。',
-          duration: 1800,
-          views_count: 25000,
-          category_id: 1,
-          performer: '郭德纲',
-          thumbnail_url: '/resource/image/首页相声.png',
-          tags: ['相声', '经典', '幽默']
-        },
-        {
-          id: 2,
-          title: '评书精选 - 单田芳《隋唐演义》',
-          description: '单田芳大师经典评书《隋唐演义》，讲述隋唐历史英雄故事。',
-          duration: 2400,
-          views_count: 18000,
-          category_id: 2,
-          performer: '单田芳',
-          thumbnail_url: '/resource/image/首页评书.jpg',
-          tags: ['评书', '历史', '经典']
-        },
-        {
-          id: 3,
-          title: '京剧经典 - 梅兰芳《贵妃醉酒》',
-          description: '梅兰芳大师经典京剧表演《贵妃醉酒》，展现京剧艺术的精髓。',
-          duration: 1500,
-          views_count: 12000,
-          category_id: 3,
-          performer: '梅兰芳',
-          thumbnail_url: '/resource/image/首页京剧.jpg',
-          tags: ['京剧', '经典', '艺术']
-        }
-      ]
-      this.totalVideos = this.videos.length
-      this.totalPages = 1
-    },
-    
-    async handleSearch() {
-      if (this.searchQuery.trim()) {
-        try {
-          await VideoService.recordSearchKeyword(this.searchQuery)
-          const result = await VideoService.searchVideos(this.searchQuery)
-          this.videos = result.videos
-          this.totalVideos = result.total
-          this.totalPages = result.totalPages
-          this.page = 1
-        } catch (error) {
-          console.error('搜索失败:', error)
-        }
-      } else {
-        await this.loadVideos()
-      }
-    },
-    
     async filterVideos() {
       this.page = 1
       await this.loadVideos()
     },
     
-    playVideo(video) {
+    async playVideo(video) {
       this.currentVideo = video
       this.showVideoModal = true
-      this.loadComments(video.id)
+      await this.loadComments(video.id)
     },
     
     closeVideo() {
       this.showVideoModal = false
       this.currentVideo = null
       this.comments = []
+      this.isLoadingComments = false
       this.newComment = ''
       this.closeExplanationModal()
     },
@@ -330,11 +304,16 @@ export default {
       if (!this.currentVideo) return
       
       try {
+        // 设置加载状态
+        this.isLoadingComments = true
+        
         // 调用真实的评论API
         this.comments = await CommentService.getComments(this.currentVideo.id)
       } catch (error) {
         console.error('加载评论失败:', error)
         this.comments = []
+      } finally {
+        this.isLoadingComments = false
       }
     },
     
@@ -486,6 +465,47 @@ export default {
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 1rem;
+  z-index: 2;
+}
+
+.search-loading {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8B4513;
+  font-size: 0.9rem;
+  z-index: 2;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 3rem 0.75rem 2.5rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 25px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #8B4513;
+  box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
 }
 
 .search-controls {
