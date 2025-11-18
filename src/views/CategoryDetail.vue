@@ -117,7 +117,11 @@
               </button>
             </div>
           </div>
-          <div v-else class="video-placeholder">
+          <!-- 使用测试数据时的提示 -->
+          <p v-if="isMockVideo" class="mock-video-tip">
+            当前为示例推荐视频，仅用于展示效果。
+          </p>
+          <div v-else-if="!displayVideo" class="video-placeholder">
             <div class="placeholder-content">
               <i class="fas fa-video"></i>
               <p>正在加载视频信息...</p>
@@ -175,6 +179,7 @@ export default {
       category: null,
       representativesData: [], // 从数据库获取的代表人物数据
       displayVideo: null, // 显示的单个视频
+      isMockVideo: false, // 是否使用了测试推荐视频
       
       // 视频弹窗相关
       showVideoModal: false,
@@ -260,6 +265,7 @@ export default {
         // 设置显示的视频（如果存在视频，则取第一个）
         if (this.relatedVideos.length > 0) {
           this.displayVideo = this.relatedVideos[0]
+          this.isMockVideo = false
         } else {
           // 如果没有视频数据，使用模拟视频
           this.useMockVideo()
@@ -435,6 +441,7 @@ export default {
       }
       
       this.displayVideo = mockVideos[this.id] || mockVideos[1]
+      this.isMockVideo = true
     },
     
     getAvatarUrl(name, avatarUrl) {

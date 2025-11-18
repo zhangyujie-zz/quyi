@@ -8,7 +8,8 @@
       <!-- 左侧：视频播放器 -->
       <div class="video-section">
         <div class="video-player">
-          <div class="player-placeholder">
+          <!-- 初始：显示封面 + 播放按钮 -->
+          <div v-if="!isPlaying" class="player-placeholder" @click="startPlay">
             <img 
               v-if="video.thumbnail_url" 
               :src="video.thumbnail_url" 
@@ -20,6 +21,30 @@
               <i class="fas fa-play-circle"></i>
             </div>
           </div>
+
+          <!-- 点击后：真正渲染播放器 -->
+          <template v-else>
+            <!-- 如果是B站链接，使用iframe嵌入播放器 -->
+            <iframe
+              v-if="isBilibili"
+              class="video-iframe"
+              :src="bilibiliEmbedUrl"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+
+            <!-- 如果有直链视频地址，使用原生video播放 -->
+            <video
+              v-else-if="videoUrl"
+              class="video-element"
+              :src="videoUrl"
+              controls
+              autoplay
+            >
+              您的浏览器不支持视频播放。
+            </video>
+          </template>
         </div>
         <div class="video-details">
           <h2>{{ video.title }}</h2>
@@ -171,10 +196,42 @@ export default {
     return {
       newComment: '',
       isSubmittingComment: false,
-      isLoadingComments: false
+      isPlaying: false
+    }
+  },
+  computed: {
+    videoUrl() {
+      return this.video?.video_url || ''
+    },
+
+    // 是否为B站链接
+    isBilibili() {
+      return /bilibili\.com\/(video|bangumi)/.test(this.videoUrl)
+    },
+
+    // 根据保存的B站链接构造可嵌入的player地址
+    bilibiliEmbedUrl() {
+      if (!this.isBilibili) return ''
+
+      try {
+        const url = this.videoUrl
+        const bvMatch = url.match(/BV[0-9A-Za-z]+/)
+        if (bvMatch) {
+          const bvid = bvMatch[0]
+          return `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&danmaku=0`
+        }
+        // 找不到BV号时退回原链接（可能仍然无法播放，但至少不报错）
+        return url
+      } catch (e) {
+        return this.videoUrl
+      }
     }
   },
   methods: {
+    startPlay() {
+      this.isPlaying = true
+    },
+
     formatDuration(seconds) {
       if (!seconds) return '00:00'
       const minutes = Math.floor(seconds / 60)
@@ -185,14 +242,20 @@ export default {
     formatTime(isoString) {
       const date = new Date(isoString)
       const now = new Date()
-      const diff = now - date
+      let diff = now - date
+
+      // 如果服务器时间略快导致 diff 为负数或非常接近 0，统一视为“刚刚”
+      if (diff <= 0 || diff < 60 * 1000) {
+        return '刚刚'
+      }
+
       const days = Math.floor(diff / (1000 * 60 * 60 * 24))
       
       if (days === 0) {
         const hours = Math.floor(diff / (1000 * 60 * 60))
         if (hours === 0) {
           const minutes = Math.floor(diff / (1000 * 60))
-          return minutes === 0 ? '刚刚' : `${minutes}分钟前`
+          return `${minutes}分钟前`
         }
         return `${hours}小时前`
       } else if (days === 1) {
@@ -314,16 +377,26 @@ export default {
   height: 300px;
   background: #000;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
 }
 
 .player-placeholder {
   width: 100%;
   height: 100%;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.video-iframe,
+.video-element {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
 }
 
 .video-cover {

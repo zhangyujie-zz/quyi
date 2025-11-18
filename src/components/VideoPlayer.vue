@@ -3,7 +3,19 @@
     <div class="player-container">
       <!-- 视频播放器 -->
       <div class="player-wrapper">
+        <!-- 如果是B站链接，使用iframe嵌入播放器 -->
+        <iframe
+          v-if="isBilibili"
+          class="video-iframe"
+          :src="bilibiliEmbedUrl"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+
+        <!-- 否则使用原生video播放直链视频 -->
         <video 
+          v-else
           ref="videoElement" 
           :src="videoUrl" 
           controls 
@@ -16,8 +28,8 @@
           您的浏览器不支持视频播放。
         </video>
         
-        <!-- 自定义播放控制 -->
-        <div class="custom-controls" v-if="!isPlaying">
+        <!-- 自定义播放控制（仅对原生video生效） -->
+        <div class="custom-controls" v-if="!isBilibili && !isPlaying">
           <button class="play-button" @click="playVideo">
             <i class="fas fa-play"></i>
           </button>
@@ -41,6 +53,10 @@
             <i class="fas fa-calendar"></i> {{ formatDate(video.performance_date) }}
           </span>
         </div>
+        <!-- 无真实音视频源提示（例如使用测试数据时） -->
+        <p v-if="!videoUrl" class="no-source-tip">
+          当前为测试示例数据，仅展示封面和信息，无实际音视频源。
+        </p>
         
         <!-- 视频描述 -->
         <div class="video-description">
@@ -133,6 +149,30 @@ export default {
   computed: {
     videoUrl() {
       return this.video?.video_url || ''
+    },
+
+    // 是否为B站链接
+    isBilibili() {
+      return /bilibili\.com\/(video|bangumi)/.test(this.videoUrl)
+    },
+
+    // 根据保存的B站链接构造可嵌入的player地址（简单从URL中提取BV号）
+    bilibiliEmbedUrl() {
+      if (!this.isBilibili) return ''
+
+      try {
+        const url = this.videoUrl
+        const bvMatch = url.match(/BV[0-9A-Za-z]+/)
+        if (bvMatch) {
+          const bvid = bvMatch[0]
+          // 使用B站通用嵌入播放器地址
+          return `https://player.bilibili.com/player.html?bvid=${bvid}&page=1&high_quality=1&danmaku=0`
+        }
+        // 找不到BV号时退回原链接（可能仍然无法播放）
+        return url
+      } catch (e) {
+        return this.videoUrl
+      }
     }
   },
   watch: {
@@ -259,6 +299,13 @@ export default {
   display: block;
 }
 
+.video-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
 .custom-controls {
   position: absolute;
   top: 0;
@@ -321,6 +368,15 @@ export default {
   margin-bottom: 1.5rem;
   line-height: 1.6;
   color: #555;
+}
+
+.no-source-tip {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: #fff3cd;
+  color: #856404;
+  font-size: 0.9rem;
 }
 
 .video-tags {
